@@ -277,16 +277,7 @@ const BusinessCanvas = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Business Model Canvas</h1>
-        <p className={styles.subtitle}>Map your business model - scroll horizontally to view all sections</p>
-        <div className={styles.guide}>
-          <span className={styles.guideItem}>👥 Who</span>
-          <span className={styles.guideSeparator}>→</span>
-          <span className={styles.guideItem}>💎 What</span>
-          <span className={styles.guideSeparator}>→</span>
-          <span className={styles.guideItem}>📢 How</span>
-          <span className={styles.guideSeparator}>→</span>
-          <span className={styles.guideItem}>💰 Money</span>
-        </div>
+        <p className={styles.subtitle}>Map your business model across 9 key building blocks</p>
       </div>
       
       <div className={styles.canvasWrapper}>
