@@ -21,13 +21,35 @@
 
 ### Ciri-ciri Utama:
 - 🎯 **Vision & Mission Management** - Urus pernyataan visi dan misi dengan versioning
-- 📊 **Business Model Canvas** - Visualisasi model perniagaan 9-blok
-- 🎯 **OKR Management** - Objectives & Key Results tracking
-- 📈 **SWOT Analysis** - Analisis Strengths, Weaknesses, Opportunities, Threats
-- 🤖 **AI Integration** - AI assistant untuk cadangan dan analisis
+- 📊 **Business Model Canvas** - Visualisasi model perniagaan 9-blok dengan horizontal scroll
+- 🎯 **OKR Management** - Objectives & Key Results tracking dengan AI suggestions
+- 📈 **SWOT Analysis** - Analisis dengan AI-powered suggestions untuk setiap kategori
+- 🏗️ **Strategic Foundation** - Core values, objectives, pillars, target markets & milestones
+- 🤖 **AI Integration** - AI assistant untuk cadangan, improve dan critique content
 - 💬 **Smart Chatbot** - Chatbot dengan memory dan keupayaan modify database
 - 🏢 **Multi-Division Support** - Sokongan untuk berbilang bahagian dalam syarikat
 - 📱 **Mobile Responsive** - Berfungsi dengan baik di semua devices
+- 🎨 **Modern UI/UX** - Clean design dengan proper spacing dan visual hierarchy
+
+### Navigation Structure:
+```
+├── Dashboard
+├── Company DNA (Collapsible Menu)
+│   ├── Strategic Foundation
+│   ├── Vision & Mission
+│   ├── Business Canvas
+│   ├── SWOT Analysis
+│   └── OKR Management
+├── Operations (Coming Soon)
+│   ├── Project Planner 🔒
+│   └── CRM 🔒
+├── Business Management (Coming Soon)
+│   ├── Finance 🔒
+│   └── Assets 🔒
+└── Administration
+    ├── Manage Users
+    └── Team Management 🔒
+```
 
 ---
 
@@ -276,6 +298,77 @@ CREATE TABLE activity_logs (
 );
 ```
 
+### 13. **core_values** - Company core values
+```sql
+CREATE TABLE core_values (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  value TEXT NOT NULL,
+  description TEXT,
+  order_index INTEGER DEFAULT 0,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 14. **strategic_objectives** - Long-term strategic objectives
+```sql
+CREATE TABLE strategic_objectives (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  objective TEXT NOT NULL,
+  description TEXT,
+  timeframe TEXT,
+  status TEXT DEFAULT 'active',
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 15. **strategic_pillars** - Strategic focus areas
+```sql
+CREATE TABLE strategic_pillars (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  pillar TEXT NOT NULL,
+  description TEXT,
+  icon TEXT,
+  color TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 16. **target_markets** - Target market segments
+```sql
+CREATE TABLE target_markets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  market_segment TEXT NOT NULL,
+  description TEXT,
+  characteristics TEXT[],
+  size_estimate TEXT,
+  priority TEXT DEFAULT 'medium',
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 17. **strategic_milestones** - Key milestones & roadmap
+```sql
+CREATE TABLE strategic_milestones (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  milestone TEXT NOT NULL,
+  description TEXT,
+  target_date DATE,
+  status TEXT DEFAULT 'planned',
+  category TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
 ---
 
 ## Implementasi AI
@@ -405,7 +498,11 @@ const AI_ACTIONS = {
   UPDATE_VISION: 'update_vision',
   UPDATE_MISSION: 'update_mission',
   CREATE_OBJECTIVE: 'create_objective',
-  ADD_SWOT_ITEM: 'add_swot_item'
+  ADD_SWOT_ITEM: 'add_swot_item',
+  ADD_CORE_VALUE: 'add_core_value',
+  ADD_STRATEGIC_OBJECTIVE: 'add_strategic_objective',
+  ADD_STRATEGIC_PILLAR: 'add_strategic_pillar',
+  UPDATE_MILESTONE_STATUS: 'update_milestone_status'
 };
 
 const SAFETY_LEVELS = {
@@ -550,7 +647,9 @@ todakfusion/
 │   │   ├── VisionMission.jsx
 │   │   ├── BusinessCanvas.jsx
 │   │   ├── OKR.jsx
-│   │   └── SWOT.jsx
+│   │   ├── SWOT.jsx
+│   │   ├── StrategicFoundation.jsx
+│   │   └── Users.jsx
 │   ├── App.jsx            # Root component & routing
 │   ├── main.jsx          # Entry point
 │   └── index.css         # Global styles
@@ -575,6 +674,7 @@ todakfusion/
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/strategic-foundation" element={<StrategicFoundation />} />
               <Route path="/vision-mission" element={<VisionMission />} />
               <Route path="/canvas" element={<BusinessCanvas />} />
               <Route path="/okr" element={<OKR />} />
@@ -630,6 +730,8 @@ User Action → Component State → Supabase API → PostgreSQL
 - Version control (track all changes)
 - AI assistance (suggest, improve, critique)
 - Scope support (company-wide or division-specific)
+- Stats cards showing word count, version count, last updated
+- Full-width layout (max-width: 1400px) untuk desktop view
 
 **Implementation:**
 ```javascript
@@ -666,30 +768,35 @@ const saveVisionMission = async (type, content) => {
 ### 2. **Business Canvas Module**
 
 **Features:**
-- 9-block canvas visualization
-- Drag-and-drop interface (planned)
-- Export to PDF (planned)
-- Collaborative editing
+- 9-block canvas dengan horizontal scroll layout
+- Inline AI suggestions untuk setiap block (✨ button)
+- Compact design dengan proper heights (450px desktop, 350px tablet, 280px mobile)
+- Color-coded blocks untuk better visual organization
+- Block descriptions untuk guide users
+- Full-width layout untuk better space utilization
 
-**Blocks:**
-1. Key Partners
-2. Key Activities  
-3. Key Resources
-4. Value Propositions
-5. Customer Relationships
-6. Channels
-7. Customer Segments
-8. Cost Structure
-9. Revenue Streams
+**Blocks (Ordered Flow):**
+1. 👥 Customer Segments - Groups of people or organizations you aim to reach
+2. 💎 Value Propositions - Products and services that create value
+3. 📢 Channels - How you reach and deliver value to customers
+4. 🤝 Customer Relationships - Types of relationships you establish
+5. 💰 Revenue Streams - How your business generates income
+6. 🔑 Key Resources - Most important assets required
+7. ⚡ Key Activities - Most important things you must do
+8. 🤝 Key Partners - Network of suppliers and partners
+9. 💸 Cost Structure - All costs incurred to operate
 
 ### 3. **OKR Module**
 
 **Features:**
-- Quarterly objectives setting
-- Key results with measurable targets
-- Progress tracking
-- Cascading OKRs (parent-child relationships)
-- Status indicators (on-track, at-risk, behind)
+- Quarterly objectives setting dengan period selector
+- Key results dengan measurable targets dan progress slider
+- Real-time progress tracking
+- AI suggestions untuk objectives (✨ button in form)
+- AI suggestions untuk key results (+ KR ✨ button per objective)
+- Visual progress bars dan percentage display
+- Enhanced UI dengan card-based key results
+- Full-width layout (max-width: 1400px)
 
 **Implementation:**
 ```javascript
@@ -724,16 +831,34 @@ const updateObjectiveProgress = async (objectiveId) => {
 ### 4. **SWOT Module**
 
 **Features:**
-- Categorized items (S/W/O/T)
-- Impact level assessment
-- AI-powered suggestions
-- Visual matrix view
+- 2x2 matrix layout dengan color-coded quadrants
+- AI suggestions untuk setiap kategori (✨ button in header)
+- Impact score rating (1-5 stars) untuk prioritization
+- Category descriptions untuk better understanding
+- Enhanced desktop view dengan taller cards (400px min-height)
+- Full-width layout (max-width: 1400px)
 
-**Categories:**
-- **Strengths**: Internal positive factors
-- **Weaknesses**: Internal negative factors
-- **Opportunities**: External positive factors
-- **Threats**: External negative factors
+**Categories dengan Descriptions:**
+- **💪 Strengths**: Internal positive attributes and resources that give your company an advantage
+- **⚠️ Weaknesses**: Internal limitations or areas that need improvement to remain competitive
+- **🚀 Opportunities**: External factors or trends that could provide competitive advantages
+- **⚡ Threats**: External challenges that could negatively impact your business
+
+### 5. **Strategic Foundation Module**
+
+**Features:**
+- 5 tabbed sections untuk comprehensive strategic planning
+- AI-powered content suggestions
+- Drag-and-drop reordering (untuk Core Values)
+- Visual cards dengan icons dan colors
+- Status tracking untuk objectives dan milestones
+
+**Sections:**
+1. **Core Values** - Fundamental beliefs guiding company culture
+2. **Strategic Objectives** - Long-term goals (3-5 years)
+3. **Strategic Pillars** - Key focus areas dengan custom icons
+4. **Target Markets** - Market segments dengan characteristics
+5. **Milestones & Roadmap** - Timeline view dengan status tracking
 
 ---
 
@@ -1005,20 +1130,53 @@ if (!import.meta.env.VITE_SUPABASE_URL) {
 
 ---
 
+## UI/UX Design Guidelines
+
+### 1. **Layout Standards**
+- **Desktop**: max-width 1400px untuk most pages (kecuali Business Canvas)
+- **Consistent spacing**: 2rem padding untuk containers
+- **Visual hierarchy**: Clear headings, subtitles, dan descriptions
+- **Color coding**: Setiap module ada signature colors
+
+### 2. **Component Heights (Desktop)**
+```css
+/* Business Canvas */
+.canvasBlock { min-height: 450px; }
+.blockContent { min-height: 320px; max-height: 380px; }
+
+/* SWOT Analysis */
+.swotQuadrant { min-height: 400px; }
+.itemList { max-height: 400px; min-height: 250px; }
+
+/* General Cards */
+.card { min-height: 120px; }
+```
+
+### 3. **AI Integration Pattern**
+- AI buttons guna ✨ icon
+- Inline placement untuk context
+- Loading state dengan "..." animation
+- Actions: Suggest, Improve, Critique
+
+---
+
 ## Future Enhancements
 
 ### 1. **Planned Features**
 
-- **Gantt Chart** untuk project planning
-- **Financial Projections** module
+- **Project Planner Module** - Gantt charts, task dependencies, resource allocation
+- **CRM Module** - Customer management, sales pipeline, contact tracking
+- **Finance Module** - Financial projections, budgeting, expense tracking
+- **Assets Management** - Inventory, equipment, digital assets tracking
+- **Team Management** - Employee profiles, roles, performance tracking
 - **Risk Management** matrix
 - **Competitor Analysis** tools
-- **Performance Dashboard** dengan charts
+- **Performance Dashboard** dengan advanced charts
 - **Email Notifications** untuk reminders
-- **Export Reports** (PDF, Excel)
+- **Export Reports** (PDF, Excel, PowerPoint)
 - **Mobile App** (React Native)
 - **Multi-language Support**
-- **Advanced Analytics** dengan ML
+- **Advanced Analytics** dengan ML integration
 
 ### 2. **AI Enhancements**
 
@@ -1079,32 +1237,63 @@ if ('serviceWorker' in navigator) {
 
 ### Common Issues:
 
-1. **404/406 Errors on Supabase**
-   ```javascript
-   // Solution: Check permissions
-   GRANT ALL ON visions_missions TO anon, authenticated;
-   
-   // Or disable RLS
-   ALTER TABLE visions_missions DISABLE ROW LEVEL SECURITY;
+1. **404 Not Found (Supabase)**
+   - Check VITE_SUPABASE_URL in .env file
+   - Ensure table exists in database
+   - Restart dev server after .env changes
+   ```bash
+   npm run dev
    ```
 
-2. **AI Not Responding**
-   ```javascript
-   // Check API key
-   console.log('API Key exists:', !!import.meta.env.VITE_OPENAI_API_KEY);
-   
-   // Check quota at https://platform.openai.com/usage
-   ```
-
-3. **Data Not Saving - Foreign Key Error**
+2. **406 Not Acceptable (Supabase)**
+   - Grant permissions to roles:
    ```sql
-   -- Ensure user has profile
+   GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+   GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+   ```
+   - Or disable RLS if not needed:
+   ```sql
+   ALTER TABLE table_name DISABLE ROW LEVEL SECURITY;
+   ```
+
+3. **400 Bad Request (OpenAI)**
+   - Verify API key is valid
+   - Check parameter names (use `max_tokens`, not `maxTokens`)
+   - Ensure prompt is within token limits
+   ```javascript
+   // Correct format
+   const response = await openai.chat.completions.create({
+     model: 'gpt-3.5-turbo',
+     messages: [...],
+     max_tokens: 150 // NOT maxTokens
+   });
+   ```
+
+4. **409 Conflict - Foreign Key Violation**
+   - Ensure user profile exists:
+   ```sql
+   -- Check if profile exists
+   SELECT * FROM profiles WHERE id = 'user-id';
+   
+   -- Create missing profiles
    INSERT INTO profiles (id, email) 
    SELECT id, email FROM auth.users 
    WHERE id NOT IN (SELECT id FROM profiles);
    ```
+   - Check auth trigger is working:
+   ```sql
+   -- Should auto-create profile on user signup
+   CREATE OR REPLACE FUNCTION handle_new_user()
+   RETURNS trigger AS $$
+   BEGIN
+     INSERT INTO public.profiles (id, email, full_name)
+     VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');
+     RETURN new;
+   END;
+   $$ LANGUAGE plpgsql SECURITY DEFINER;
+   ```
 
-4. **Performance Issues**
+5. **Performance Issues**
    ```javascript
    // Implement pagination
    const { data, error } = await supabase
