@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Menu, X, Home, Users, Sun, Moon, LogOut, User, Eye, Grid3X3, Target, Activity, Building2, ChevronDown, ChevronRight, Fingerprint, Settings } from 'lucide-react';
+import { Menu, X, Home, Users, Sun, Moon, LogOut, User, Eye, Grid3X3, Target, Activity, Building2, ChevronDown, ChevronRight, Fingerprint, Settings, FolderKanban, UserCheck, DollarSign, Package, Lock, UserPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import AIChatbot from '../AIChatbot';
@@ -78,11 +78,34 @@ const Layout = () => {
     { type: 'separator' },
     {
       type: 'section',
+      id: 'operations',
+      icon: FolderKanban,
+      label: 'Operations',
+      items: [
+        { path: '/project-planner', icon: FolderKanban, label: 'Project Planner', disabled: true },
+        { path: '/crm', icon: UserPlus, label: 'CRM', disabled: true },
+      ]
+    },
+    { type: 'separator' },
+    {
+      type: 'section',
+      id: 'business',
+      icon: DollarSign,
+      label: 'Business Management',
+      items: [
+        { path: '/finance', icon: DollarSign, label: 'Finance', disabled: true },
+        { path: '/assets', icon: Package, label: 'Assets', disabled: true },
+      ]
+    },
+    { type: 'separator' },
+    {
+      type: 'section',
       id: 'admin',
       icon: Settings,
       label: 'Administration',
       items: [
         { path: '/users', icon: Users, label: 'Manage Users' },
+        { path: '/team-management', icon: UserCheck, label: 'Team Management', disabled: true },
       ]
     }
   ];
@@ -138,6 +161,20 @@ const Layout = () => {
                       {item.items.map(subItem => {
                         const SubIcon = subItem.icon;
                         const isActive = location.pathname === subItem.path;
+                        
+                        if (subItem.disabled) {
+                          return (
+                            <div
+                              key={subItem.path}
+                              className={`${styles.navItem} ${styles.subItem} ${styles.disabled}`}
+                            >
+                              <SubIcon size={18} />
+                              <span>{subItem.label}</span>
+                              <Lock size={14} className={styles.lockIcon} />
+                            </div>
+                          );
+                        }
+                        
                         return (
                           <Link
                             key={subItem.path}
