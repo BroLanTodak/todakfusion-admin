@@ -173,25 +173,25 @@ const Dashboard = () => {
         </div>
         <div className={styles.overallProgress}>
           <div className={styles.progressCircle}>
-            <svg width="80" height="80">
+            <svg width="100" height="100">
               <circle
-                cx="40"
-                cy="40"
-                r="35"
+                cx="50"
+                cy="50"
+                r="42"
                 fill="none"
                 stroke="#e0e0e0"
-                strokeWidth="5"
+                strokeWidth="6"
               />
               <circle
-                cx="40"
-                cy="40"
-                r="35"
+                cx="50"
+                cy="50"
+                r="42"
                 fill="none"
                 stroke="#3498db"
-                strokeWidth="5"
-                strokeDasharray={`${overallProgress * 2.2} 220`}
+                strokeWidth="6"
+                strokeDasharray={`${overallProgress * 2.64} 264`}
                 strokeDashoffset="0"
-                transform="rotate(-90 40 40)"
+                transform="rotate(-90 50 50)"
               />
             </svg>
             <div className={styles.progressText}>{overallProgress}%</div>
