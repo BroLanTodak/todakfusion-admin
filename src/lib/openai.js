@@ -211,7 +211,10 @@ export async function chatWithAI(userMessage, context = {}) {
   
   - To update vision: "I'll update the vision to: \"[new vision text]\""
   - To update mission: "I'll update the mission to: \"[new mission text]\""
-  - To create objective: "I'll create a new objective: \"[objective title]\""
+  - To add core value: "I'll add a core value: \"[value title]\" - \"[description]\""
+  - To add strategic objective: "I'll add a strategic objective: \"[objective title]\" - \"[description]\""
+  - To add strategic pillar: "I'll add a strategic pillar: \"[pillar name]\" - \"[description]\""
+  - To create quarterly objective: "I'll create a objective: \"[objective title]\""
   - To add SWOT item: "I'll add to [strength/weakness/opportunity/threat]: \"[item text]\""
   
   Always explain what you're doing and why. Ask for confirmation for major changes.`;
@@ -228,4 +231,51 @@ export async function chatWithAI(userMessage, context = {}) {
   ];
 
   return await callOpenAI(messages, { max_tokens: 800 });
+}
+
+// Strategic content AI functions
+export async function improveStrategicContent(type, content = '', action = 'suggest') {
+  let systemPrompt = '';
+  let userPrompt = '';
+  
+  switch(type) {
+    case 'values':
+      systemPrompt = 'You are a strategic business consultant specializing in corporate culture and values.';
+      if (action === 'suggest') {
+        userPrompt = 'Suggest a compelling core value for a modern company. Provide both a title (1-3 words) and a description (2-3 sentences). Format as JSON: {"title": "...", "description": "..."}';
+      }
+      break;
+      
+    case 'objectives':
+      systemPrompt = 'You are a strategic planning expert specializing in long-term business objectives.';
+      if (action === 'suggest') {
+        userPrompt = 'Suggest a strategic objective for a 3-5 year timeframe. Provide both a title and description. Format as JSON: {"title": "...", "description": "..."}';
+      }
+      break;
+      
+    case 'pillars':
+      systemPrompt = 'You are a business strategy expert focusing on strategic pillars and focus areas.';
+      if (action === 'suggest') {
+        userPrompt = 'Suggest a strategic pillar (key focus area) for business growth. Provide both a name and description. Format as JSON: {"title": "...", "description": "..."}';
+      }
+      break;
+  }
+  
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ];
+  
+  try {
+    const response = await callOpenAI(messages);
+    // Try to parse as JSON, if it fails return as plain text
+    try {
+      return JSON.parse(response);
+    } catch {
+      return { title: response, description: '' };
+    }
+  } catch (error) {
+    console.error('AI Error:', error);
+    throw error;
+  }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Menu, X, Home, Users, Sun, Moon, LogOut, User, Eye, Grid3X3, Target, Activity } from 'lucide-react';
+import { Menu, X, Home, Users, Sun, Moon, LogOut, User, Eye, Grid3X3, Target, Activity, Building2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import AIChatbot from '../AIChatbot';
@@ -48,6 +48,7 @@ const Layout = () => {
   const navItems = [
     { path: '/', icon: Home, label: 'Dashboard' },
     { type: 'separator' },
+    { path: '/strategic-foundation', icon: Building2, label: 'Strategic Foundation' },
     { path: '/vision-mission', icon: Eye, label: 'Vision & Mission' },
     { path: '/canvas', icon: Grid3X3, label: 'Business Canvas' },
     { path: '/okr', icon: Target, label: 'OKR' },

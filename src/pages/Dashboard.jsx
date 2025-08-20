@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Grid3X3, Target, Activity, Users, TrendingUp } from 'lucide-react';
+import { Eye, Grid3X3, Target, Activity, Users, TrendingUp, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './Dashboard.module.css';
 
@@ -9,6 +9,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const modules = [
+    { 
+      icon: Building2, 
+      label: 'Strategic Foundation', 
+      path: '/strategic-foundation', 
+      color: '#9b59b6', 
+      description: 'Core values, long-term objectives & strategic pillars'
+    },
     { 
       icon: Eye, 
       label: 'Vision & Mission', 

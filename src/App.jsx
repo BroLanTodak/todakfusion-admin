@@ -10,6 +10,7 @@ import VisionMission from './pages/VisionMission';
 import BusinessCanvas from './pages/BusinessCanvas';
 import OKR from './pages/OKR';
 import SWOT from './pages/SWOT';
+import StrategicFoundation from './pages/StrategicFoundation';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               }
             >
               <Route index element={<Dashboard />} />
+              <Route path="strategic-foundation" element={<StrategicFoundation />} />
               <Route path="vision-mission" element={<VisionMission />} />
               <Route path="canvas" element={<BusinessCanvas />} />
               <Route path="okr" element={<OKR />} />

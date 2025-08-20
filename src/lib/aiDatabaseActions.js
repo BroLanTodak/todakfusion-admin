@@ -7,6 +7,11 @@ const AI_ACTIONS = {
   UPDATE_VISION: 'update_vision',
   UPDATE_MISSION: 'update_mission',
   
+  // Strategic Foundation Actions
+  ADD_CORE_VALUE: 'add_core_value',
+  ADD_STRATEGIC_OBJECTIVE: 'add_strategic_objective',
+  ADD_STRATEGIC_PILLAR: 'add_strategic_pillar',
+  
   // OKR Actions
   CREATE_OBJECTIVE: 'create_objective',
   UPDATE_OBJECTIVE: 'update_objective',
@@ -34,6 +39,9 @@ const SAFETY_LEVELS = {
 const ACTION_SAFETY = {
   [AI_ACTIONS.UPDATE_VISION]: SAFETY_LEVELS.HIGH,
   [AI_ACTIONS.UPDATE_MISSION]: SAFETY_LEVELS.HIGH,
+  [AI_ACTIONS.ADD_CORE_VALUE]: SAFETY_LEVELS.MEDIUM,
+  [AI_ACTIONS.ADD_STRATEGIC_OBJECTIVE]: SAFETY_LEVELS.MEDIUM,
+  [AI_ACTIONS.ADD_STRATEGIC_PILLAR]: SAFETY_LEVELS.MEDIUM,
   [AI_ACTIONS.CREATE_OBJECTIVE]: SAFETY_LEVELS.MEDIUM,
   [AI_ACTIONS.UPDATE_OBJECTIVE]: SAFETY_LEVELS.MEDIUM,
   [AI_ACTIONS.DELETE_OBJECTIVE]: SAFETY_LEVELS.HIGH,
@@ -51,7 +59,10 @@ export function parseAIIntent(aiResponse) {
   const actionPatterns = {
     [AI_ACTIONS.UPDATE_VISION]: /(?:update|change|modify|set)\s+(?:the\s+)?vision\s+to:?\s*"([^"]+)"/i,
     [AI_ACTIONS.UPDATE_MISSION]: /(?:update|change|modify|set)\s+(?:the\s+)?mission\s+to:?\s*"([^"]+)"/i,
-    [AI_ACTIONS.CREATE_OBJECTIVE]: /(?:create|add|new)\s+objective:?\s*"([^"]+)"/i,
+    [AI_ACTIONS.ADD_CORE_VALUE]: /(?:add|create)\s+(?:a\s+)?(?:core\s+)?value:?\s*"([^"]+)"(?:\s*-\s*"([^"]+)")?/i,
+    [AI_ACTIONS.ADD_STRATEGIC_OBJECTIVE]: /(?:add|create)\s+(?:a\s+)?strategic\s+objective:?\s*"([^"]+)"(?:\s*-\s*"([^"]+)")?/i,
+    [AI_ACTIONS.ADD_STRATEGIC_PILLAR]: /(?:add|create)\s+(?:a\s+)?strategic\s+pillar:?\s*"([^"]+)"(?:\s*-\s*"([^"]+)")?/i,
+    [AI_ACTIONS.CREATE_OBJECTIVE]: /(?:create|add|new)\s+(?:quarterly\s+)?objective:?\s*"([^"]+)"/i,
     [AI_ACTIONS.ADD_SWOT_ITEM]: /add\s+to\s+(strength|weakness|opportunity|threat):?\s*"([^"]+)"/i,
   };
 
@@ -75,6 +86,25 @@ function extractParams(action, match) {
     case AI_ACTIONS.UPDATE_VISION:
     case AI_ACTIONS.UPDATE_MISSION:
       return { content: match[1] };
+    
+    case AI_ACTIONS.ADD_CORE_VALUE:
+      return { 
+        title: match[1],
+        description: match[2] || ''
+      };
+    
+    case AI_ACTIONS.ADD_STRATEGIC_OBJECTIVE:
+      return { 
+        title: match[1],
+        description: match[2] || '',
+        timeframe: '3_years'
+      };
+    
+    case AI_ACTIONS.ADD_STRATEGIC_PILLAR:
+      return { 
+        name: match[1],
+        description: match[2] || ''
+      };
     
     case AI_ACTIONS.CREATE_OBJECTIVE:
       return { title: match[1] };
@@ -111,6 +141,15 @@ export async function executeAIAction(action, params, userId, needsConfirmation 
       
       case AI_ACTIONS.UPDATE_MISSION:
         return await updateVisionMission('mission', params.content, userId);
+      
+      case AI_ACTIONS.ADD_CORE_VALUE:
+        return await addCoreValue(params, userId);
+      
+      case AI_ACTIONS.ADD_STRATEGIC_OBJECTIVE:
+        return await addStrategicObjective(params, userId);
+      
+      case AI_ACTIONS.ADD_STRATEGIC_PILLAR:
+        return await addStrategicPillar(params, userId);
       
       case AI_ACTIONS.CREATE_OBJECTIVE:
         return await createObjective(params, userId);
@@ -229,6 +268,82 @@ function getCurrentQuarter() {
   return `Q${Math.ceil(month / 3)}`;
 }
 
+// Add core value
+async function addCoreValue(params, userId) {
+  const { data, error } = await supabase
+    .from('core_values')
+    .insert({
+      title: params.title,
+      description: params.description,
+      icon: '💎',
+      created_by: userId,
+      order_position: 999 // Will be at the end
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return {
+    success: true,
+    data,
+    message: `Core value "${params.title}" added successfully`
+  };
+}
+
+// Add strategic objective
+async function addStrategicObjective(params, userId) {
+  // Calculate target date based on timeframe
+  const targetDate = new Date();
+  const years = params.timeframe === '1_year' ? 1 : params.timeframe === '5_years' ? 5 : 3;
+  targetDate.setFullYear(targetDate.getFullYear() + years);
+
+  const { data, error } = await supabase
+    .from('strategic_objectives')
+    .insert({
+      title: params.title,
+      description: params.description,
+      timeframe: params.timeframe,
+      target_date: targetDate.toISOString().split('T')[0],
+      created_by: userId,
+      status: 'active'
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return {
+    success: true,
+    data,
+    message: `Strategic objective "${params.title}" created for ${years} year timeframe`
+  };
+}
+
+// Add strategic pillar
+async function addStrategicPillar(params, userId) {
+  const { data, error } = await supabase
+    .from('strategic_pillars')
+    .insert({
+      name: params.name,
+      description: params.description,
+      icon: '🏛️',
+      color: '#3498db',
+      created_by: userId,
+      order_position: 999
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return {
+    success: true,
+    data,
+    message: `Strategic pillar "${params.name}" added successfully`
+  };
+}
+
 // Format action for display
 export function formatActionForConfirmation(action, params) {
   switch (action) {
@@ -246,6 +361,30 @@ export function formatActionForConfirmation(action, params) {
         description: 'The AI wants to update your mission to:',
         content: params.content,
         warning: 'This will create a new version of your mission statement.'
+      };
+    
+    case AI_ACTIONS.ADD_CORE_VALUE:
+      return {
+        title: 'Add Core Value',
+        description: 'The AI wants to add a new core value:',
+        content: `${params.title}${params.description ? ' - ' + params.description : ''}`,
+        warning: 'This will add a fundamental value that guides your company\'s actions.'
+      };
+    
+    case AI_ACTIONS.ADD_STRATEGIC_OBJECTIVE:
+      return {
+        title: 'Add Strategic Objective',
+        description: 'The AI wants to add a long-term strategic objective:',
+        content: `${params.title}${params.description ? ' - ' + params.description : ''}`,
+        warning: `This will create a ${params.timeframe.replace('_', ' ')} strategic goal.`
+      };
+    
+    case AI_ACTIONS.ADD_STRATEGIC_PILLAR:
+      return {
+        title: 'Add Strategic Pillar',
+        description: 'The AI wants to add a strategic focus area:',
+        content: `${params.name}${params.description ? ' - ' + params.description : ''}`,
+        warning: 'This will add a key focus area for your business strategy.'
       };
     
     case AI_ACTIONS.CREATE_OBJECTIVE:
