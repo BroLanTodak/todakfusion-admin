@@ -1,13 +1,38 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { improveSWOTCategory } from '../lib/openai';
 import styles from './SWOT.module.css';
 
 const SWOT_CATEGORIES = [
-  { type: 'strength', title: 'Strengths', icon: '💪', color: '#2ECC71' },
-  { type: 'weakness', title: 'Weaknesses', icon: '⚠️', color: '#E74C3C' },
-  { type: 'opportunity', title: 'Opportunities', icon: '🚀', color: '#3498DB' },
-  { type: 'threat', title: 'Threats', icon: '⚡', color: '#F39C12' }
+  { 
+    type: 'strength', 
+    title: 'Strengths', 
+    icon: '💪', 
+    color: '#2ECC71',
+    description: 'Internal positive attributes and resources that give your company an advantage'
+  },
+  { 
+    type: 'weakness', 
+    title: 'Weaknesses', 
+    icon: '⚠️', 
+    color: '#E74C3C',
+    description: 'Internal limitations or areas that need improvement to remain competitive'
+  },
+  { 
+    type: 'opportunity', 
+    title: 'Opportunities', 
+    icon: '🚀', 
+    color: '#3498DB',
+    description: 'External factors or trends that could provide competitive advantages'
+  },
+  { 
+    type: 'threat', 
+    title: 'Threats', 
+    icon: '⚡', 
+    color: '#F39C12',
+    description: 'External challenges that could negatively impact your business'
+  }
 ];
 
 const SWOT = () => {
@@ -21,6 +46,7 @@ const SWOT = () => {
   const [loading, setLoading] = useState(true);
   const [editingCategory, setEditingCategory] = useState(null);
   const [newItem, setNewItem] = useState('');
+  const [aiLoading, setAiLoading] = useState(null);
 
   useEffect(() => {
     loadSWOTData();
@@ -110,13 +136,46 @@ const SWOT = () => {
     }
   };
 
+  const handleAISuggest = async (category) => {
+    setAiLoading(category.type);
+    try {
+      const currentItems = swotData[category.type].map(item => item.content);
+      const suggestions = await improveSWOTCategory(category.type, currentItems, 'suggest');
+      
+      // Parse suggestions and add them
+      const lines = suggestions.split('\n').filter(line => line.trim());
+      for (const line of lines) {
+        const content = line.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '').trim();
+        if (content) {
+          await supabase
+            .from('swot_items')
+            .insert({
+              category: category.type,
+              content,
+              created_by: user.id
+            });
+        }
+      }
+      
+      await loadSWOTData();
+    } catch (error) {
+      console.error('Error getting AI suggestions:', error);
+      alert('Error getting AI suggestions. Please try again.');
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
   if (loading) {
     return <div className={styles.loading}>Loading SWOT Analysis...</div>;
   }
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>SWOT Analysis</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}>SWOT Analysis</h1>
+        <p className={styles.subtitle}>Analyze internal capabilities and external factors affecting your business</p>
+      </div>
       
       <div className={styles.swotGrid}>
         {SWOT_CATEGORIES.map(category => (
@@ -129,8 +188,21 @@ const SWOT = () => {
               className={styles.quadrantHeader}
               style={{ backgroundColor: category.color + '20' }}
             >
-              <span className={styles.icon}>{category.icon}</span>
-              <h3>{category.title}</h3>
+              <div className={styles.headerContent}>
+                <div className={styles.titleRow}>
+                  <span className={styles.icon}>{category.icon}</span>
+                  <h3>{category.title}</h3>
+                </div>
+                <button
+                  className={styles.aiButton}
+                  onClick={() => handleAISuggest(category)}
+                  disabled={aiLoading === category.type}
+                  title="AI Assistant"
+                >
+                  {aiLoading === category.type ? '...' : '✨'}
+                </button>
+              </div>
+              <p className={styles.categoryDescription}>{category.description}</p>
             </div>
             
             <div className={styles.quadrantContent}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { improveOKR } from '../lib/openai';
 import styles from './OKR.module.css';
 
 const OKR = () => {
@@ -11,6 +12,7 @@ const OKR = () => {
   const [showAddObjective, setShowAddObjective] = useState(false);
   const [newObjective, setNewObjective] = useState({ title: '', description: '' });
   const [expandedObjectives, setExpandedObjectives] = useState({});
+  const [aiLoading, setAiLoading] = useState(null);
 
   useEffect(() => {
     loadOKRs();
@@ -111,6 +113,42 @@ const OKR = () => {
     }
   };
 
+  const handleAISuggestObjective = async () => {
+    setAiLoading('objective');
+    try {
+      const suggestion = await improveOKR('objective', '', selectedPeriod, 'suggest');
+      setNewObjective({ 
+        title: suggestion.trim().split('\n')[0].replace(/^[-*•]\s*/, ''), 
+        description: '' 
+      });
+    } catch (error) {
+      console.error('Error getting AI suggestion:', error);
+      alert('Error getting AI suggestion. Please try again.');
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
+  const handleAISuggestKeyResults = async (objective) => {
+    setAiLoading(`kr-${objective.id}`);
+    try {
+      const suggestions = await improveOKR('keyResult', '', objective.title, 'suggest');
+      const lines = suggestions.split('\n').filter(line => line.trim());
+      
+      for (const line of lines) {
+        const krTitle = line.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '').trim();
+        if (krTitle) {
+          await addKeyResult(objective.id, krTitle);
+        }
+      }
+    } catch (error) {
+      console.error('Error getting AI suggestions:', error);
+      alert('Error getting AI suggestions. Please try again.');
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
   const periods = ['Q1-2024', 'Q2-2024', 'Q3-2024', 'Q4-2024'];
 
   if (loading) {
@@ -120,7 +158,10 @@ const OKR = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Objectives & Key Results (OKR)</h1>
+        <div className={styles.titleSection}>
+          <h1 className={styles.title}>Objectives & Key Results (OKR)</h1>
+          <p className={styles.subtitle}>Set ambitious goals and track measurable outcomes</p>
+        </div>
         <div className={styles.controls}>
           <select 
             className={styles.periodSelect}
@@ -142,7 +183,18 @@ const OKR = () => {
 
       {showAddObjective && (
         <div className={styles.addObjectiveForm}>
-          <h3>New Objective</h3>
+          <div className={styles.formHeader}>
+            <h3>New Objective</h3>
+            <button
+              className={styles.aiButton}
+              onClick={handleAISuggestObjective}
+              disabled={aiLoading === 'objective'}
+              title="AI Suggestion"
+            >
+              {aiLoading === 'objective' ? '...' : '✨'}
+            </button>
+          </div>
+          <p className={styles.formDescription}>Define a clear, ambitious goal for this quarter</p>
           <input
             type="text"
             className={styles.input}
@@ -197,6 +249,19 @@ const OKR = () => {
                       <p className={styles.description}>{objective.description}</p>
                     )}
                   </div>
+                </div>
+                <div className={styles.objectiveActions}>
+                  <button
+                    className={styles.aiSmallButton}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAISuggestKeyResults(objective);
+                    }}
+                    disabled={aiLoading === `kr-${objective.id}`}
+                    title="Suggest Key Results"
+                  >
+                    {aiLoading === `kr-${objective.id}` ? '...' : '+ KR ✨'}
+                  </button>
                 </div>
                 <div className={styles.progressContainer}>
                   <span className={styles.progressText}>{objective.progress || 0}%</span>

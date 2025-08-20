@@ -280,6 +280,47 @@ export async function improveStrategicContent(type, content = '', action = 'sugg
   }
 }
 
+// SWOT Analysis AI functions
+export async function improveSWOTCategory(category, currentItems = [], action = 'suggest') {
+  const categoryDescriptions = {
+    strength: "Internal positive attributes and resources that give the company an advantage",
+    weakness: "Internal limitations or areas that need improvement",
+    opportunity: "External factors that could provide competitive advantages",
+    threat: "External challenges that could negatively impact the business"
+  };
+
+  const prompts = {
+    suggest: `Suggest 3-5 ${category}s for a business in the technology/software industry. Consider ${categoryDescriptions[category]}. Current items: ${currentItems.join(', ') || 'None'}. Return as a simple list.`,
+    improve: `Review and improve these ${category}s: ${currentItems.join(', ')}. Make them more specific, actionable, and impactful. Return as a simple list.`,
+    critique: `Critically analyze these ${category}s: ${currentItems.join(', ')}. Identify gaps, overlaps, or areas that need more clarity. Provide constructive feedback.`
+  };
+
+  const response = await callOpenAI(prompts[action], 150);
+  return response;
+}
+
+// OKR AI functions
+export async function improveOKR(type, content = '', context = '', action = 'suggest') {
+  const prompts = {
+    objective: {
+      suggest: `Suggest a clear, ambitious, and inspiring objective for the quarter. It should be qualitative and motivating. Context: ${context || 'Technology company focused on business planning solutions'}`,
+      improve: `Improve this objective to make it more clear, ambitious, and inspiring: "${content}". Ensure it's qualitative and time-bound.`,
+      critique: `Critique this objective: "${content}". Is it ambitious enough? Is it clear and inspiring? Does it align with best OKR practices?`
+    },
+    keyResult: {
+      suggest: `Suggest 3-4 specific, measurable key results for this objective: "${context}". Each should be quantifiable with clear metrics and targets.`,
+      improve: `Improve these key results to be more specific and measurable: "${content}". Ensure each has clear metrics and ambitious targets.`,
+      critique: `Critique these key results: "${content}". Are they measurable? Are the targets ambitious but achievable? Do they truly indicate success of the objective?`
+    }
+  };
+
+  const prompt = prompts[type]?.[action];
+  if (!prompt) throw new Error('Invalid OKR parameters');
+
+  const response = await callOpenAI(prompt, 200);
+  return response;
+}
+
 // Business Canvas AI functions
 export async function improveCanvasBlock(blockType, blockTitle, currentItems = [], action = 'suggest') {
   const systemPrompt = 'You are a business model canvas expert helping to build comprehensive business models.';
