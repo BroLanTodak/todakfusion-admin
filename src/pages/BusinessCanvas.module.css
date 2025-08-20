@@ -1,12 +1,12 @@
 .container {
   padding: 2rem;
-  min-height: 100vh;
+  max-width: 100%;
   background: var(--bg-primary);
 }
 
 .header {
-  max-width: 1400px;
-  margin: 0 auto 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .title {
@@ -17,8 +17,32 @@
 }
 
 .subtitle {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+/* Guide */
+.guide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.guideItem {
+  background: var(--bg-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.guideSeparator {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
 }
 
 .loading {
@@ -30,149 +54,131 @@
   color: var(--text-secondary);
 }
 
-/* Canvas Wrapper & Container */
+/* Canvas Wrapper */
 .canvasWrapper {
   position: relative;
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
   background: var(--bg-secondary);
   border-radius: 16px;
+  padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
 }
 
-.canvasContainer {
-  min-width: 1200px;
-  max-width: 1600px;
-  margin: 0 auto;
+.canvasScroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 1rem;
 }
 
-/* Business Model Canvas Grid Layout */
-.canvasGrid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(3, minmax(220px, auto));
+.canvasRow {
+  display: flex;
   gap: 1rem;
-  width: 100%;
-  min-height: 700px;
+  min-width: fit-content;
+  padding: 0.5rem 0;
 }
-
-/* Grid positioning using position classes */
-.kp { grid-column: 1; grid-row: 1 / 3; }
-.ka { grid-column: 2; grid-row: 1; }
-.kr { grid-column: 2; grid-row: 2; }
-.vp { grid-column: 3; grid-row: 1 / 3; }
-.cr { grid-column: 4; grid-row: 1; }
-.ch { grid-column: 4; grid-row: 2; }
-.cs { grid-column: 5; grid-row: 1 / 3; }
-.cost { grid-column: 1 / 3; grid-row: 3; }
-.revenue { grid-column: 4 / 6; grid-row: 3; }
 
 /* Canvas Block Styling */
 .canvasBlock {
   background: var(--bg-primary);
   border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
+  border-top: 4px solid;
+  min-width: 280px;
+  max-width: 320px;
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .canvasBlock:hover {
-  border-color: var(--primary);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
-
-/* Color accents for different sections */
-.kp, .ka, .kr { border-left: 4px solid #3498db; }
-.vp { border-left: 4px solid #e74c3c; }
-.cr, .ch { border-left: 4px solid #f39c12; }
-.cs { border-left: 4px solid #9b59b6; }
-.cost { border-left: 4px solid #e67e22; }
-.revenue { border-left: 4px solid #27ae60; }
 
 .blockHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--border-color);
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 12px 12px 0 0;
 }
 
 .blockTitle {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .blockIcon {
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   line-height: 1;
 }
 
 .blockHeader h3 {
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   margin: 0;
   color: var(--text-primary);
   font-weight: 600;
 }
 
 .blockContent {
+  padding: 1rem;
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  min-height: 300px;
   max-height: 400px;
+  overflow-y: auto;
 }
 
 .itemList {
   list-style: none;
   padding: 0;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
   flex: 1;
 }
 
 .item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
+  align-items: start;
+  padding: 0.5rem 0.75rem;
   margin-bottom: 0.5rem;
   background: var(--bg-secondary);
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
   color: var(--text-primary);
-  border: 1px solid transparent;
-  transition: all 0.2s;
+  line-height: 1.4;
+  gap: 0.5rem;
+}
+
+.item span {
+  flex: 1;
+  word-break: break-word;
 }
 
 .item:hover {
-  border-color: var(--border-color);
-  transform: translateX(4px);
+  background: var(--bg-tertiary);
 }
 
 .deleteButton {
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
   padding: 0;
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 4px;
   transition: all 0.2s;
-  opacity: 0.6;
+  opacity: 0.5;
+  flex-shrink: 0;
 }
 
 .deleteButton:hover {
@@ -183,13 +189,13 @@
 
 .addNewButton {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background: transparent;
-  border: 2px dashed var(--border-color);
-  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.2s;
   margin-top: auto;
 }
@@ -203,25 +209,24 @@
 .addItemForm {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-top: auto;
 }
 
 .input {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   transition: border-color 0.2s;
 }
 
 .input:focus {
   outline: none;
   border-color: var(--primary);
-  background: var(--bg-primary);
 }
 
 .formButtons {
@@ -232,10 +237,10 @@
 .addButton,
 .cancelButton {
   flex: 1;
-  padding: 0.6rem;
+  padding: 0.4rem;
   border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -252,134 +257,92 @@
 }
 
 .addButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  opacity: 0.9;
 }
 
 .cancelButton:hover {
   background: var(--bg-secondary);
 }
 
-/* Canvas Info */
-.canvasInfo {
-  margin-top: 2rem;
+/* Scroll Indicator */
+.scrollIndicator {
   text-align: center;
-}
-
-.infoCard {
-  display: inline-block;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1rem 2rem;
+  padding: 1rem 0 0;
   color: var(--text-secondary);
+  font-size: 0.85rem;
+  animation: pulse 2s infinite;
 }
 
-.infoCard h4 {
-  margin: 0 0 0.5rem 0;
-  color: var(--text-primary);
-  font-size: 1rem;
-}
-
-.infoCard p {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 /* Scrollbar styling */
-.canvasWrapper::-webkit-scrollbar {
-  height: 12px;
+.canvasScroll::-webkit-scrollbar {
+  height: 8px;
 }
 
-.canvasWrapper::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-  border-radius: 6px;
+.canvasScroll::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
 }
 
-.canvasWrapper::-webkit-scrollbar-thumb {
+.canvasScroll::-webkit-scrollbar-thumb {
   background: var(--border-color);
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
-.canvasWrapper::-webkit-scrollbar-thumb:hover {
+.canvasScroll::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+/* Hide scroll indicator when not needed */
+@media (min-width: 2400px) {
+  .scrollIndicator {
+    display: none;
+  }
 }
 
 /* Tablet view */
 @media (max-width: 1024px) {
-  .canvasWrapper {
-    padding: 1.5rem;
-  }
-  
-  .canvasContainer {
-    min-width: 900px;
-  }
-  
-  .canvasGrid {
-    grid-template-rows: repeat(3, minmax(180px, auto));
-  }
-  
-  .canvasBlock {
-    padding: 1.25rem;
-  }
-}
-
-/* Mobile view - Stack vertically */
-@media (max-width: 768px) {
   .container {
     padding: 1rem;
   }
   
+  .canvasBlock {
+    min-width: 250px;
+  }
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
   .title {
     font-size: 1.5rem;
   }
   
-  .subtitle {
-    font-size: 1rem;
+  .guide {
+    display: none;
   }
   
   .canvasWrapper {
     padding: 1rem;
-    overflow-x: visible;
-  }
-  
-  .canvasContainer {
-    min-width: unset;
-  }
-  
-  .canvasGrid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    min-height: unset;
-  }
-  
-  /* Reset grid positioning on mobile */
-  .kp, .ka, .kr, .vp, .cr, .ch, .cs, .cost, .revenue {
-    grid-column: unset;
-    grid-row: unset;
   }
   
   .canvasBlock {
-    padding: 1rem;
-    min-height: 150px;
+    min-width: 240px;
+  }
+  
+  .blockContent {
+    min-height: 250px;
   }
   
   .blockHeader h3 {
-    font-size: 1rem;
-  }
-  
-  .blockIcon {
-    font-size: 1.5rem;
+    font-size: 0.9rem;
   }
   
   .item {
-    font-size: 0.9rem;
-    padding: 0.5rem;
-  }
-  
-  .canvasInfo {
-    display: none;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
   }
 }

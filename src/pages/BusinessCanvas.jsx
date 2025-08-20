@@ -5,17 +5,17 @@ import AIButton from '../components/AIButton';
 import { improveCanvasBlock } from '../lib/openai';
 import styles from './BusinessCanvas.module.css';
 
-// Business Model Canvas blocks dengan proper positioning
+// Business Model Canvas blocks in logical order
 const CANVAS_BLOCKS = [
-  { type: 'key_partners', title: 'Key Partners', icon: '🤝', position: 'kp' },
-  { type: 'key_activities', title: 'Key Activities', icon: '⚡', position: 'ka' },
-  { type: 'key_resources', title: 'Key Resources', icon: '🔧', position: 'kr' },
-  { type: 'value_propositions', title: 'Value Propositions', icon: '💎', position: 'vp' },
-  { type: 'customer_relationships', title: 'Customer Relationships', icon: '💬', position: 'cr' },
-  { type: 'channels', title: 'Channels', icon: '📢', position: 'ch' },
-  { type: 'customer_segments', title: 'Customer Segments', icon: '👥', position: 'cs' },
-  { type: 'cost_structure', title: 'Cost Structure', icon: '💰', position: 'cost' },
-  { type: 'revenue_streams', title: 'Revenue Streams', icon: '💵', position: 'revenue' }
+  { type: 'customer_segments', title: 'Customer Segments', icon: '👥', color: '#9b59b6' },
+  { type: 'value_propositions', title: 'Value Propositions', icon: '💎', color: '#e74c3c' },
+  { type: 'channels', title: 'Channels', icon: '📢', color: '#f39c12' },
+  { type: 'customer_relationships', title: 'Customer Relationships', icon: '💬', color: '#3498db' },
+  { type: 'revenue_streams', title: 'Revenue Streams', icon: '💵', color: '#27ae60' },
+  { type: 'key_resources', title: 'Key Resources', icon: '🔧', color: '#34495e' },
+  { type: 'key_activities', title: 'Key Activities', icon: '⚡', color: '#16a085' },
+  { type: 'key_partners', title: 'Key Partners', icon: '🤝', color: '#2c3e50' },
+  { type: 'cost_structure', title: 'Cost Structure', icon: '💰', color: '#e67e22' }
 ];
 
 const BusinessCanvas = () => {
@@ -142,7 +142,11 @@ const BusinessCanvas = () => {
   }
 
   const renderCanvasBlock = (block) => (
-    <div key={block.type} className={`${styles.canvasBlock} ${styles[block.position]}`}>
+    <div 
+      key={block.type} 
+      className={styles.canvasBlock}
+      style={{ borderTopColor: block.color }}
+    >
       <div className={styles.blockHeader}>
         <div className={styles.blockTitle}>
           <span className={styles.blockIcon}>{block.icon}</span>
@@ -216,21 +220,27 @@ const BusinessCanvas = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Business Model Canvas</h1>
-        <p className={styles.subtitle}>Map out your business model on a single page</p>
+        <p className={styles.subtitle}>Map your business model - scroll horizontally to view all sections</p>
+        <div className={styles.guide}>
+          <span className={styles.guideItem}>👥 Who</span>
+          <span className={styles.guideSeparator}>→</span>
+          <span className={styles.guideItem}>💎 What</span>
+          <span className={styles.guideSeparator}>→</span>
+          <span className={styles.guideItem}>📢 How</span>
+          <span className={styles.guideSeparator}>→</span>
+          <span className={styles.guideItem}>💰 Money</span>
+        </div>
       </div>
       
       <div className={styles.canvasWrapper}>
-        <div className={styles.canvasContainer}>
-          <div className={styles.canvasGrid}>
+        <div className={styles.canvasScroll}>
+          <div className={styles.canvasRow}>
             {CANVAS_BLOCKS.map(block => renderCanvasBlock(block))}
           </div>
-          
-          <div className={styles.canvasInfo}>
-            <div className={styles.infoCard}>
-              <h4>💡 Pro Tip</h4>
-              <p>Scroll horizontally to view the entire canvas. Each section represents a key aspect of your business model.</p>
-            </div>
-          </div>
+        </div>
+        
+        <div className={styles.scrollIndicator}>
+          <span>← Scroll horizontally to view all 9 sections →</span>
         </div>
       </div>
     </div>
