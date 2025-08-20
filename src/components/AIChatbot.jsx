@@ -16,6 +16,8 @@ const AIChatbot = () => {
   const [loading, setLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [actionStatus, setActionStatus] = useState(null);
+  const [conversationId, setConversationId] = useState(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -25,6 +27,140 @@ const AIChatbot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load or create conversation when chat opens
+  useEffect(() => {
+    if (isOpen && user && !conversationId) {
+      loadOrCreateConversation();
+    }
+  }, [isOpen, user]);
+
+  // Load or create a conversation
+  const loadOrCreateConversation = async () => {
+    if (!user) return;
+    
+    setLoadingHistory(true);
+    try {
+      // Try to get the most recent active conversation
+      const { data: conversations, error: convError } = await supabase
+        .from('chat_conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      let activeConversation;
+      
+      if (!convError && conversations && conversations.length > 0) {
+        // Use existing conversation
+        activeConversation = conversations[0];
+      } else {
+        // Create new conversation
+        const { data: newConv, error: createError } = await supabase
+          .from('chat_conversations')
+          .insert({
+            user_id: user.id,
+            title: `Chat ${new Date().toLocaleDateString()}`,
+            status: 'active',
+            metadata: {
+              startedAt: new Date().toISOString(),
+              userAgent: navigator.userAgent
+            }
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        activeConversation = newConv;
+      }
+
+      setConversationId(activeConversation.id);
+      
+      // Load messages for this conversation
+      await loadMessages(activeConversation.id);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  // Load messages from database
+  const loadMessages = async (convId) => {
+    try {
+      const { data: dbMessages, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('conversation_id', convId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (dbMessages && dbMessages.length > 0) {
+        // Convert database messages to chat format
+        const formattedMessages = dbMessages.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.created_at,
+          hasAction: msg.metadata?.hasAction,
+          actionPending: msg.metadata?.actionPending,
+          actionCompleted: msg.metadata?.actionCompleted
+        }));
+        
+        setMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
+  };
+
+  // Save message to database
+  const saveMessage = async (message) => {
+    if (!conversationId || !user) return;
+
+    try {
+      await supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id: conversationId,
+          role: message.role,
+          content: message.content,
+          user_id: user.id,
+          metadata: {
+            hasAction: message.hasAction,
+            actionPending: message.actionPending,
+            actionCompleted: message.actionCompleted,
+            actionFailed: message.actionFailed,
+            timestamp: message.timestamp
+          }
+        });
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  };
+
+  // Start new conversation
+  const startNewConversation = async () => {
+    if (!user) return;
+    
+    // Mark current conversation as completed
+    if (conversationId) {
+      await supabase
+        .from('chat_conversations')
+        .update({ status: 'completed' })
+        .eq('id', conversationId);
+    }
+    
+    // Clear current messages
+    setMessages([]);
+    setConversationId(null);
+    setPendingAction(null);
+    setActionStatus(null);
+    
+    // Create new conversation
+    await loadOrCreateConversation();
+  };
 
   // Get context data based on current page
   const getContextData = async () => {
@@ -104,6 +240,9 @@ const AIChatbot = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
+    
+    // Save user message to database
+    await saveMessage(userMessage);
 
     try {
       // Get current context including database data
@@ -179,6 +318,9 @@ const AIChatbot = () => {
       }
       
       setMessages(prev => [...prev, aiMessage]);
+      
+      // Save AI message to database
+      await saveMessage(aiMessage);
     } catch (error) {
       console.error('Chat error:', error);
       
@@ -282,17 +424,31 @@ const AIChatbot = () => {
         <div className={styles.chatWindow}>
           <div className={styles.chatHeader}>
             <h3>Todak AI Assistant</h3>
-            <button
-              className={styles.closeButton}
-              onClick={() => setIsOpen(false)}
-              aria-label="Close chat"
-            >
-              <X size={20} />
-            </button>
+            <div className={styles.headerActions}>
+              <button
+                className={styles.newChatButton}
+                onClick={startNewConversation}
+                title="Start new conversation"
+              >
+                New Chat
+              </button>
+              <button
+                className={styles.closeButton}
+                onClick={() => setIsOpen(false)}
+                aria-label="Close chat"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           <div className={styles.messagesContainer}>
-            {messages.length === 0 ? (
+            {loadingHistory ? (
+              <div className={styles.loadingHistory}>
+                <div className={styles.spinner}></div>
+                <p>Loading conversation history...</p>
+              </div>
+            ) : messages.length === 0 ? (
               <div className={styles.welcomeMessage}>
                 <p>Hi! I'm Todak AI, your intelligent business planning assistant. I can:</p>
                 <ul>
@@ -301,8 +457,14 @@ const AIChatbot = () => {
                   <li>📊 Analyze your SWOT and provide insights</li>
                   <li>💡 Help with your business model canvas</li>
                   <li>🔍 Access your saved data to give contextual advice</li>
+                  <li>💬 Remember our conversation history</li>
                 </ul>
                 <p>Ask me anything about your business plan!</p>
+                {conversationId && (
+                  <p className={styles.sessionInfo}>
+                    Continuing previous conversation...
+                  </p>
+                )}
               </div>
             ) : (
               messages.map((message, index) => (
