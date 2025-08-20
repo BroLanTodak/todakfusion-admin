@@ -120,6 +120,8 @@ const AIChatbot = () => {
       // Check if AI wants to perform an action
       const intent = parseAIIntent(response);
       
+      let aiMessage;
+      
       if (intent) {
         // AI wants to perform a database action
         const result = await executeAIAction(
@@ -136,18 +138,16 @@ const AIChatbot = () => {
             confirmationData: formatActionForConfirmation(intent.action, intent.params)
           });
           
-          const aiMessage = {
+          aiMessage = {
             role: 'assistant',
             content: response,
             hasAction: true,
             actionPending: true,
             timestamp: new Date().toISOString()
           };
-          
-          setMessages(prev => [...prev, aiMessage]);
         } else if (result.success) {
           // Action executed successfully
-          const aiMessage = {
+          aiMessage = {
             role: 'assistant',
             content: `${response}\n\n✅ ${result.message}`,
             hasAction: true,
@@ -155,34 +155,30 @@ const AIChatbot = () => {
             timestamp: new Date().toISOString()
           };
           
-          setMessages(prev => [...prev, aiMessage]);
-          
           // Refresh page data if needed
           if (window.location.reload) {
             setTimeout(() => window.location.reload(), 1500);
           }
+        } else {
+          // Action failed
+          aiMessage = {
+            role: 'assistant',
+            content: `${response}\n\n❌ ${result.error || 'Action failed'}`,
+            hasAction: true,
+            actionFailed: true,
+            timestamp: new Date().toISOString()
+          };
         }
       } else {
         // Normal response without action
-        const aiMessage = {
+        aiMessage = {
           role: 'assistant',
           content: response,
           timestamp: new Date().toISOString()
         };
-
-        setMessages(prev => [...prev, aiMessage]);
       }
-
-      // Save to database (optional)
-      await supabase.from('chat_messages').insert({
-        role: 'user',
-        content: userMessage.content
-      });
       
-      await supabase.from('chat_messages').insert({
-        role: 'assistant',
-        content: aiMessage.content
-      });
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Chat error:', error);
       
