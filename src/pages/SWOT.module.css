@@ -1,0 +1,284 @@
+.container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: var(--text-primary);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.swotGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, minmax(300px, auto));
+  gap: 1.5rem;
+}
+
+.swotQuadrant {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.quadrantHeader {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.quadrantHeader h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.quadrantContent {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.itemList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+.swotItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+
+.swotItem:hover {
+  transform: translateX(4px);
+}
+
+.itemContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.itemContent span {
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.impactScore {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.impactButton {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.impactButton.active {
+  color: white;
+  border-color: transparent;
+}
+
+.impactButton:hover {
+  transform: scale(1.1);
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+}
+
+.deleteButton:hover {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff4444;
+}
+
+.addNewButton {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  border: 2px dashed;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  margin-top: auto;
+}
+
+.addNewButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.addItemForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.formButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.addButton,
+.cancelButton {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.addButton {
+  background: var(--primary);
+  color: black;
+}
+
+.cancelButton {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.addButton:hover,
+.cancelButton:hover {
+  opacity: 0.8;
+}
+
+.legend {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Tablet view */
+@media (max-width: 1024px) {
+  .swotGrid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, minmax(250px, auto));
+  }
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .swotGrid {
+    gap: 1rem;
+  }
+  
+  .swotQuadrant {
+    min-height: 250px;
+  }
+  
+  .quadrantHeader {
+    padding: 0.75rem 1rem;
+  }
+  
+  .quadrantHeader h3 {
+    font-size: 1rem;
+  }
+  
+  .quadrantContent {
+    padding: 1rem;
+  }
+  
+  .itemList {
+    max-height: 200px;
+  }
+  
+  .swotItem {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .impactButton {
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+  }
+}

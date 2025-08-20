@@ -1,0 +1,231 @@
+.container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: var(--text-primary);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.canvasGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(3, minmax(200px, auto));
+  gap: 1rem;
+  grid-template-areas:
+    "partners activities propositions relationships segments"
+    "partners resources propositions channels segments"
+    "costs costs . revenues revenues";
+}
+
+.canvasBlock {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+
+/* Grid positioning */
+.canvasBlock:nth-child(1) { grid-area: partners; }
+.canvasBlock:nth-child(2) { grid-area: activities; }
+.canvasBlock:nth-child(3) { grid-area: propositions; }
+.canvasBlock:nth-child(4) { grid-area: relationships; }
+.canvasBlock:nth-child(5) { grid-area: segments; }
+.canvasBlock:nth-child(6) { grid-area: resources; }
+.canvasBlock:nth-child(7) { grid-area: channels; }
+.canvasBlock:nth-child(8) { grid-area: costs; }
+.canvasBlock:nth-child(9) { grid-area: revenues; }
+
+.blockHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.blockIcon {
+  font-size: 1.5rem;
+}
+
+.blockHeader h3 {
+  font-size: 1.1rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.blockContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.itemList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  flex: 1;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.deleteButton:hover {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff4444;
+}
+
+.addNewButton {
+  width: 100%;
+  padding: 0.5rem;
+  background: transparent;
+  border: 2px dashed var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.addNewButton:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.addItemForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.formButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.addButton,
+.cancelButton {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.addButton {
+  background: var(--primary);
+  color: black;
+}
+
+.cancelButton {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.addButton:hover,
+.cancelButton:hover {
+  opacity: 0.8;
+}
+
+/* Tablet view */
+@media (max-width: 1024px) {
+  .canvasGrid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: none;
+  }
+  
+  .canvasBlock {
+    grid-area: auto !important;
+  }
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .canvasGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .canvasBlock {
+    padding: 1rem;
+    min-height: 150px;
+  }
+  
+  .blockHeader h3 {
+    font-size: 1rem;
+  }
+  
+  .item {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+  }
+}

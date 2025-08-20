@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(rm:*)",
+      "Bash(ls:*)",
+      "Bash(npm run dev:*)",
+      "Bash(mv:*)",
+      "Bash(true)",
+      "Bash(npx @modelcontextprotocol/create-server:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(env)",
+      "Bash(node:*)",
+      "Bash(find:*)",
+      "Bash(supabase login:*)",
+      "Bash(supabase init:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase db:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(pkill:*)",
+      "Bash(supabase status:*)",
+      "Bash(supabase projects:*)",
+      "Bash(supabase:*)"
+    ],
+    "deny": []
+  }
+}
