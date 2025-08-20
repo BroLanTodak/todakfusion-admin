@@ -279,3 +279,50 @@ export async function improveStrategicContent(type, content = '', action = 'sugg
     throw error;
   }
 }
+
+// Business Canvas AI functions
+export async function improveCanvasBlock(blockType, blockTitle, currentItems = [], action = 'suggest') {
+  const systemPrompt = 'You are a business model canvas expert helping to build comprehensive business models.';
+  
+  let userPrompt = '';
+  
+  const blockContext = {
+    key_partners: 'Key Partners are the network of suppliers and partners that make the business model work.',
+    key_activities: 'Key Activities are the most important actions a company must take to operate successfully.',
+    key_resources: 'Key Resources are the most important assets required to make a business model work.',
+    value_propositions: 'Value Propositions are the bundle of products and services that create value for a specific Customer Segment.',
+    customer_relationships: 'Customer Relationships describe the types of relationships a company establishes with specific Customer Segments.',
+    channels: 'Channels describe how a company communicates with and reaches its Customer Segments to deliver a Value Proposition.',
+    customer_segments: 'Customer Segments define the different groups of people or organizations an enterprise aims to reach and serve.',
+    cost_structure: 'Cost Structure describes all costs incurred to operate a business model.',
+    revenue_streams: 'Revenue Streams represent the cash a company generates from each Customer Segment.'
+  };
+  
+  if (action === 'suggest') {
+    userPrompt = `For the ${blockTitle} section of a Business Model Canvas: ${blockContext[blockType]}
+    
+    Current items: ${currentItems.length > 0 ? currentItems.join(', ') : 'None'}
+    
+    Suggest 3 relevant items for this section. Return as a JSON array of strings, each item should be concise (1-2 lines).
+    Format: ["item1", "item2", "item3"]`;
+  }
+  
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ];
+  
+  try {
+    const response = await callOpenAI(messages);
+    // Try to parse as JSON array
+    try {
+      return JSON.parse(response);
+    } catch {
+      // If not JSON, split by newlines and return as array
+      return response.split('\n').filter(item => item.trim().length > 0);
+    }
+  } catch (error) {
+    console.error('AI Error:', error);
+    throw error;
+  }
+}
