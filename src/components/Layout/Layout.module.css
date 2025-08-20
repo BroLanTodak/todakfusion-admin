@@ -68,6 +68,84 @@
   margin: 1rem 1.5rem;
 }
 
+/* Hierarchical Menu Styles */
+.navSection {
+  margin-bottom: 0.25rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.sectionHeader:hover {
+  background-color: rgba(255, 215, 0, 0.1);
+  color: #FFD700;
+}
+
+.sectionHeader.hasActive {
+  color: #FFD700;
+  background-color: rgba(255, 215, 0, 0.05);
+}
+
+.sectionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sectionItems {
+  margin-top: 0.25rem;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+.navItem.subItem {
+  padding-left: 3rem;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.navItem.subItem::before {
+  content: '';
+  position: absolute;
+  left: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+}
+
+.navItem.subItem.active::before {
+  background: #FFD700;
+  width: 6px;
+  height: 6px;
+}
+
 .main {
   flex: 1;
   display: flex;

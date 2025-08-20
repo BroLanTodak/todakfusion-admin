@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Menu, X, Home, Users, Sun, Moon, LogOut, User, Eye, Grid3X3, Target, Activity, Building2 } from 'lucide-react';
+import { Menu, X, Home, Users, Sun, Moon, LogOut, User, Eye, Grid3X3, Target, Activity, Building2, ChevronDown, ChevronRight, FileText, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import AIChatbot from '../AIChatbot';
@@ -9,6 +9,7 @@ import styles from './Layout.module.css';
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [expandedSections, setExpandedSections] = useState(['planning']);
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
@@ -45,16 +46,45 @@ const Layout = () => {
     }
   };
 
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionId) 
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
+    );
+  };
+
   const navItems = [
-    { path: '/', icon: Home, label: 'Dashboard' },
+    { 
+      type: 'item',
+      path: '/', 
+      icon: Home, 
+      label: 'Dashboard' 
+    },
     { type: 'separator' },
-    { path: '/strategic-foundation', icon: Building2, label: 'Strategic Foundation' },
-    { path: '/vision-mission', icon: Eye, label: 'Vision & Mission' },
-    { path: '/canvas', icon: Grid3X3, label: 'Business Canvas' },
-    { path: '/okr', icon: Target, label: 'OKR' },
-    { path: '/swot', icon: Activity, label: 'SWOT Analysis' },
+    {
+      type: 'section',
+      id: 'planning',
+      icon: FileText,
+      label: 'Business Planning',
+      items: [
+        { path: '/strategic-foundation', icon: Building2, label: 'Strategic Foundation' },
+        { path: '/vision-mission', icon: Eye, label: 'Vision & Mission' },
+        { path: '/canvas', icon: Grid3X3, label: 'Business Canvas' },
+        { path: '/swot', icon: Activity, label: 'SWOT Analysis' },
+        { path: '/okr', icon: Target, label: 'OKR Management' },
+      ]
+    },
     { type: 'separator' },
-    { path: '/users', icon: Users, label: 'Manage Users' },
+    {
+      type: 'section',
+      id: 'admin',
+      icon: Settings,
+      label: 'Administration',
+      items: [
+        { path: '/users', icon: Users, label: 'Manage Users' },
+      ]
+    }
   ];
 
   return (
@@ -86,6 +116,47 @@ const Layout = () => {
               return <div key={`separator-${index}`} className={styles.separator} />;
             }
             
+            if (item.type === 'section') {
+              const Icon = item.icon;
+              const isExpanded = expandedSections.includes(item.id);
+              const hasActiveChild = item.items.some(child => location.pathname === child.path);
+              
+              return (
+                <div key={item.id} className={styles.navSection}>
+                  <button
+                    className={`${styles.sectionHeader} ${hasActiveChild ? styles.hasActive : ''}`}
+                    onClick={() => toggleSection(item.id)}
+                  >
+                    <div className={styles.sectionHeaderLeft}>
+                      <Icon size={20} />
+                      <span>{item.label}</span>
+                    </div>
+                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </button>
+                  {isExpanded && (
+                    <div className={styles.sectionItems}>
+                      {item.items.map(subItem => {
+                        const SubIcon = subItem.icon;
+                        const isActive = location.pathname === subItem.path;
+                        return (
+                          <Link
+                            key={subItem.path}
+                            to={subItem.path}
+                            className={`${styles.navItem} ${styles.subItem} ${isActive ? styles.active : ''}`}
+                            onClick={handleNavClick}
+                          >
+                            <SubIcon size={18} />
+                            <span>{subItem.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            
+            // Regular item
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
