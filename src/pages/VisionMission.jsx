@@ -175,11 +175,41 @@ const VisionMission = () => {
     return <div className={styles.loading}>Loading...</div>;
   }
 
+  // Calculate stats
+  const visionWordCount = vision ? vision.trim().split(/\s+/).length : 0;
+  const missionWordCount = mission ? mission.trim().split(/\s+/).length : 0;
+  const versionCount = 1; // You can fetch this from DB later
+  const lastUpdated = new Date().toLocaleDateString(); // This should come from DB
+
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Vision & Mission</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Vision & Mission</h1>
+        <p className={styles.subtitle}>Define your company's purpose and direction</p>
+      </div>
+
+      {/* Stats cards */}
+      <div className={styles.statsRow}>
+        <div className={styles.statCard}>
+          <h3>Vision Words</h3>
+          <p>{visionWordCount}</p>
+        </div>
+        <div className={styles.statCard}>
+          <h3>Mission Words</h3>
+          <p>{missionWordCount}</p>
+        </div>
+        <div className={styles.statCard}>
+          <h3>Versions</h3>
+          <p>{versionCount}</p>
+        </div>
+        <div className={styles.statCard}>
+          <h3>Last Updated</h3>
+          <p style={{fontSize: '1.2rem'}}>{lastUpdated}</p>
+        </div>
+      </div>
       
-      <div className={styles.section}>
+      <div className={styles.sectionsGrid}>
+        <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2>Vision</h2>
           <div className={styles.headerButtons}>
@@ -289,6 +319,7 @@ const VisionMission = () => {
             {mission || 'No mission statement yet. Click edit to add one.'}
           </p>
         )}
+        </div>
       </div>
     </div>
   );
