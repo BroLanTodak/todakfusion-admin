@@ -1,21 +1,74 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import AIButton from '../components/AIButton';
 import { improveCanvasBlock } from '../lib/openai';
 import styles from './BusinessCanvas.module.css';
 
 // Business Model Canvas blocks in logical order
 const CANVAS_BLOCKS = [
-  { type: 'customer_segments', title: 'Customer Segments', icon: '👥', color: '#9b59b6' },
-  { type: 'value_propositions', title: 'Value Propositions', icon: '💎', color: '#e74c3c' },
-  { type: 'channels', title: 'Channels', icon: '📢', color: '#f39c12' },
-  { type: 'customer_relationships', title: 'Customer Relationships', icon: '💬', color: '#3498db' },
-  { type: 'revenue_streams', title: 'Revenue Streams', icon: '💵', color: '#27ae60' },
-  { type: 'key_resources', title: 'Key Resources', icon: '🔧', color: '#34495e' },
-  { type: 'key_activities', title: 'Key Activities', icon: '⚡', color: '#16a085' },
-  { type: 'key_partners', title: 'Key Partners', icon: '🤝', color: '#2c3e50' },
-  { type: 'cost_structure', title: 'Cost Structure', icon: '💰', color: '#e67e22' }
+  { 
+    type: 'customer_segments', 
+    title: 'Customer Segments', 
+    icon: '👥', 
+    color: '#9b59b6',
+    description: 'Groups of people or organizations you aim to reach and serve'
+  },
+  { 
+    type: 'value_propositions', 
+    title: 'Value Propositions', 
+    icon: '💎', 
+    color: '#e74c3c',
+    description: 'Products and services that create value for your customers'
+  },
+  { 
+    type: 'channels', 
+    title: 'Channels', 
+    icon: '📢', 
+    color: '#f39c12',
+    description: 'How you reach and deliver value to your customers'
+  },
+  { 
+    type: 'customer_relationships', 
+    title: 'Customer Relationships', 
+    icon: '💬', 
+    color: '#3498db',
+    description: 'Types of relationships you establish with customers'
+  },
+  { 
+    type: 'revenue_streams', 
+    title: 'Revenue Streams', 
+    icon: '💵', 
+    color: '#27ae60',
+    description: 'How your business generates income from customers'
+  },
+  { 
+    type: 'key_resources', 
+    title: 'Key Resources', 
+    icon: '🔧', 
+    color: '#34495e',
+    description: 'Most important assets required to make your model work'
+  },
+  { 
+    type: 'key_activities', 
+    title: 'Key Activities', 
+    icon: '⚡', 
+    color: '#16a085',
+    description: 'Most important things you must do to operate'
+  },
+  { 
+    type: 'key_partners', 
+    title: 'Key Partners', 
+    icon: '🤝', 
+    color: '#2c3e50',
+    description: 'Network of suppliers and partners that help you'
+  },
+  { 
+    type: 'cost_structure', 
+    title: 'Cost Structure', 
+    icon: '💰', 
+    color: '#e67e22',
+    description: 'All costs incurred to operate your business model'
+  }
 ];
 
 const BusinessCanvas = () => {
@@ -148,16 +201,20 @@ const BusinessCanvas = () => {
       style={{ borderTopColor: block.color }}
     >
       <div className={styles.blockHeader}>
-        <div className={styles.blockTitle}>
+        <h3 className={styles.blockTitle}>
           <span className={styles.blockIcon}>{block.icon}</span>
-          <h3>{block.title}</h3>
-        </div>
-        <AIButton
-          onSuggest={() => handleAISuggest(block.type, block.title)}
-          loading={aiLoading === block.type}
-          compact
-        />
+          {block.title}
+        </h3>
+        <button
+          className={styles.aiButton}
+          onClick={() => handleAISuggest(block.type, block.title)}
+          disabled={aiLoading === block.type}
+          title="AI Assistant"
+        >
+          {aiLoading === block.type ? '...' : '✨'}
+        </button>
       </div>
+      <p className={styles.blockDescription}>{block.description}</p>
       
       <div className={styles.blockContent}>
         <ul className={styles.itemList}>
