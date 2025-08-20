@@ -36,8 +36,9 @@
   position: relative;
   background: var(--bg-secondary);
   border-radius: 12px;
-  padding: 1rem;
+  padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-height: 520px;
 }
 
 .canvasScroll {
@@ -60,7 +61,7 @@
   border: 1px solid var(--border-color);
   border-top: 3px solid;
   width: 260px;
-  min-height: 280px;
+  min-height: 450px;
   display: flex;
   flex-direction: column;
   transition: all 0.2s ease;
@@ -138,7 +139,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 180px;
+  min-height: 320px;
+  max-height: 380px;
   overflow-y: auto;
 }
 
@@ -307,6 +309,25 @@
   background: var(--text-secondary);
 }
 
+/* Block content scrollbar */
+.blockContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.blockContent::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+.blockContent::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.blockContent::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
 /* Hide scroll indicator when not needed */
 @media (min-width: 2400px) {
   .scrollIndicator {
@@ -320,8 +341,17 @@
     padding: 1rem;
   }
   
+  .canvasWrapper {
+    min-height: 420px;
+  }
+  
   .canvasBlock {
     min-width: 240px;
+    min-height: 350px;
+  }
+  
+  .blockContent {
+    min-height: 240px;
   }
 }
 
@@ -341,15 +371,16 @@
   
   .canvasWrapper {
     padding: 0.75rem;
+    min-height: auto;
   }
   
   .canvasBlock {
     width: 240px;
-    min-height: 260px;
+    min-height: 280px;
   }
   
   .blockContent {
-    min-height: 160px;
+    min-height: 180px;
   }
   
   .blockTitle {
