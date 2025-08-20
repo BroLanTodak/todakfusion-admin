@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Menu, X, Home, Users, Sun, Moon, LogOut, User, Eye, Grid3X3, Target, Activity, Building2, ChevronDown, ChevronRight, FileText, Settings } from 'lucide-react';
+import { Menu, X, Home, Users, Sun, Moon, LogOut, User, Eye, Grid3X3, Target, Activity, Building2, ChevronDown, ChevronRight, Fingerprint, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import AIChatbot from '../AIChatbot';
@@ -9,7 +9,7 @@ import styles from './Layout.module.css';
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [expandedSections, setExpandedSections] = useState(['planning']);
+  const [expandedSections, setExpandedSections] = useState(['dna']);
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
@@ -64,9 +64,9 @@ const Layout = () => {
     { type: 'separator' },
     {
       type: 'section',
-      id: 'planning',
-      icon: FileText,
-      label: 'Business Planning',
+      id: 'dna',
+      icon: Fingerprint,
+      label: 'Company DNA',
       items: [
         { path: '/strategic-foundation', icon: Building2, label: 'Strategic Foundation' },
         { path: '/vision-mission', icon: Eye, label: 'Vision & Mission' },
