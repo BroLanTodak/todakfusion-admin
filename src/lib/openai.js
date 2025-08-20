@@ -205,6 +205,16 @@ export async function chatWithAI(userMessage, context = {}) {
   }
 
   systemPrompt += `\n\nBe concise, practical, and supportive. When asked about the current data, provide specific insights and suggestions based on what you can see.`;
+  
+  // Add instructions for database actions
+  systemPrompt += `\n\nIMPORTANT: You have the ability to modify database content when the user asks. When you want to perform an action, include it in your response using these EXACT formats:
+  
+  - To update vision: "I'll update the vision to: \"[new vision text]\""
+  - To update mission: "I'll update the mission to: \"[new mission text]\""
+  - To create objective: "I'll create a new objective: \"[objective title]\""
+  - To add SWOT item: "I'll add to [strength/weakness/opportunity/threat]: \"[item text]\""
+  
+  Always explain what you're doing and why. Ask for confirmation for major changes.`;
 
   const messages = [
     {

@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, AlertCircle, CheckCircle } from 'lucide-react';
 import { chatWithAI } from '../lib/openai';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useLocation } from 'react-router-dom';
+import { parseAIIntent, executeAIAction, formatActionForConfirmation } from '../lib/aiDatabaseActions';
 import styles from './AIChatbot.module.css';
 
 const AIChatbot = () => {
@@ -13,6 +14,8 @@ const AIChatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [actionStatus, setActionStatus] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -114,13 +117,61 @@ const AIChatbot = () => {
 
       const response = await chatWithAI(input, context);
       
-      const aiMessage = {
-        role: 'assistant',
-        content: response,
-        timestamp: new Date().toISOString()
-      };
+      // Check if AI wants to perform an action
+      const intent = parseAIIntent(response);
+      
+      if (intent) {
+        // AI wants to perform a database action
+        const result = await executeAIAction(
+          intent.action, 
+          intent.params, 
+          user.id,
+          true // needs confirmation
+        );
 
-      setMessages(prev => [...prev, aiMessage]);
+        if (result.requiresConfirmation) {
+          // Store pending action and show confirmation
+          setPendingAction({
+            ...intent,
+            confirmationData: formatActionForConfirmation(intent.action, intent.params)
+          });
+          
+          const aiMessage = {
+            role: 'assistant',
+            content: response,
+            hasAction: true,
+            actionPending: true,
+            timestamp: new Date().toISOString()
+          };
+          
+          setMessages(prev => [...prev, aiMessage]);
+        } else if (result.success) {
+          // Action executed successfully
+          const aiMessage = {
+            role: 'assistant',
+            content: `${response}\n\n✅ ${result.message}`,
+            hasAction: true,
+            actionCompleted: true,
+            timestamp: new Date().toISOString()
+          };
+          
+          setMessages(prev => [...prev, aiMessage]);
+          
+          // Refresh page data if needed
+          if (window.location.reload) {
+            setTimeout(() => window.location.reload(), 1500);
+          }
+        }
+      } else {
+        // Normal response without action
+        const aiMessage = {
+          role: 'assistant',
+          content: response,
+          timestamp: new Date().toISOString()
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+      }
 
       // Save to database (optional)
       await supabase.from('chat_messages').insert({
@@ -145,6 +196,78 @@ const AIChatbot = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle action confirmation
+  const handleConfirmAction = async () => {
+    if (!pendingAction || !user) return;
+
+    setLoading(true);
+    try {
+      const result = await executeAIAction(
+        pendingAction.action,
+        pendingAction.params,
+        user.id,
+        false // don't need confirmation again
+      );
+
+      if (result.success) {
+        setActionStatus({
+          type: 'success',
+          message: result.message
+        });
+        
+        // Update last message to show action completed
+        setMessages(prev => {
+          const newMessages = [...prev];
+          const lastMessage = newMessages[newMessages.length - 1];
+          if (lastMessage && lastMessage.actionPending) {
+            lastMessage.actionPending = false;
+            lastMessage.actionCompleted = true;
+            lastMessage.content += `\n\n✅ ${result.message}`;
+          }
+          return newMessages;
+        });
+
+        // Refresh page after 1.5 seconds
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        setActionStatus({
+          type: 'error',
+          message: result.error || 'Action failed'
+        });
+      }
+    } catch (error) {
+      setActionStatus({
+        type: 'error',
+        message: error.message
+      });
+    } finally {
+      setLoading(false);
+      setPendingAction(null);
+    }
+  };
+
+  // Handle action rejection
+  const handleRejectAction = () => {
+    setPendingAction(null);
+    setActionStatus({
+      type: 'info',
+      message: 'Action cancelled'
+    });
+
+    // Update last message
+    setMessages(prev => {
+      const newMessages = [...prev];
+      const lastMessage = newMessages[newMessages.length - 1];
+      if (lastMessage && lastMessage.actionPending) {
+        lastMessage.actionPending = false;
+        lastMessage.content += '\n\n❌ Action cancelled by user';
+      }
+      return newMessages;
+    });
   };
 
   return (
@@ -199,6 +322,51 @@ const AIChatbot = () => {
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Action Confirmation Dialog */}
+          {pendingAction && (
+            <div className={styles.actionConfirmation}>
+              <div className={styles.actionHeader}>
+                <AlertCircle size={20} />
+                <h4>{pendingAction.confirmationData.title}</h4>
+              </div>
+              <p className={styles.actionDescription}>
+                {pendingAction.confirmationData.description}
+              </p>
+              <div className={styles.actionContent}>
+                "{pendingAction.confirmationData.content}"
+              </div>
+              {pendingAction.confirmationData.warning && (
+                <p className={styles.actionWarning}>
+                  ⚠️ {pendingAction.confirmationData.warning}
+                </p>
+              )}
+              <div className={styles.actionButtons}>
+                <button
+                  onClick={handleConfirmAction}
+                  disabled={loading}
+                  className={styles.confirmButton}
+                >
+                  {loading ? 'Processing...' : 'Confirm'}
+                </button>
+                <button
+                  onClick={handleRejectAction}
+                  disabled={loading}
+                  className={styles.cancelButton}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Action Status */}
+          {actionStatus && (
+            <div className={`${styles.actionStatus} ${styles[actionStatus.type]}`}>
+              {actionStatus.type === 'success' && <CheckCircle size={16} />}
+              {actionStatus.message}
+            </div>
+          )}
 
           <div className={styles.inputContainer}>
             <input
