@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Building2, Users, UsersRound, ChevronRight, ChevronDown, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Building2, Users, UsersRound, ChevronRight, ChevronDown, X, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './OrganizationalStructure.module.css';
+import TagSelector from '../components/TagSelector';
+import MultiDepartmentSelector from '../components/MultiDepartmentSelector';
 
 const OrganizationalStructure = () => {
   const { user } = useAuth();
@@ -45,13 +47,30 @@ const OrganizationalStructure = () => {
   };
 
   const loadDivisions = async () => {
+    console.log('Loading divisions...');
     const { data, error } = await supabase
       .from('divisions')
       .select('*, head_of_division:profiles(full_name)')
       .eq('is_active', true)
       .order('order_position');
     
-    if (!error && data) setDivisions(data);
+    if (error) {
+      console.error('Error loading divisions:', error);
+      // Try loading without profile join
+      const { data: divisionsOnly, error: simpleError } = await supabase
+        .from('divisions')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_position');
+      
+      if (!simpleError && divisionsOnly) {
+        console.log('Loaded divisions without profiles:', divisionsOnly);
+        setDivisions(divisionsOnly);
+      }
+    } else if (data) {
+      console.log('Loaded divisions with profiles:', data);
+      setDivisions(data);
+    }
   };
 
   const loadDepartments = async () => {
@@ -61,7 +80,17 @@ const OrganizationalStructure = () => {
       .eq('is_active', true)
       .order('order_position');
     
-    if (!error && data) setDepartments(data);
+    if (error) {
+      console.error('Error loading departments:', error);
+      const { data: deptsOnly, error: simpleError } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_position');
+      if (!simpleError && deptsOnly) setDepartments(deptsOnly);
+    } else if (data) {
+      setDepartments(data);
+    }
   };
 
   const loadUnits = async () => {
@@ -71,7 +100,17 @@ const OrganizationalStructure = () => {
       .eq('is_active', true)
       .order('order_position');
     
-    if (!error && data) setUnits(data);
+    if (error) {
+      console.error('Error loading units:', error);
+      const { data: unitsOnly, error: simpleError } = await supabase
+        .from('units')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_position');
+      if (!simpleError && unitsOnly) setUnits(unitsOnly);
+    } else if (data) {
+      setUnits(data);
+    }
   };
 
   const loadSubUnits = async () => {
@@ -81,7 +120,17 @@ const OrganizationalStructure = () => {
       .eq('is_active', true)
       .order('order_position');
     
-    if (!error && data) setSubUnits(data);
+    if (error) {
+      console.error('Error loading sub units:', error);
+      const { data: subUnitsOnly, error: simpleError } = await supabase
+        .from('sub_units')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_position');
+      if (!simpleError && subUnitsOnly) setSubUnits(subUnitsOnly);
+    } else if (data) {
+      setSubUnits(data);
+    }
   };
 
   // Modal handlers
@@ -140,7 +189,9 @@ const OrganizationalStructure = () => {
           name: formData.name,
           code: formData.code,
           description: formData.description,
-          department_id: selectedParent?.id || editingItem?.department_id,
+          department_id: formData.selectedDepartments?.[0]?.id || selectedParent?.id || editingItem?.department_id,
+          primary_department_id: formData.primaryDepartmentId,
+          is_shared: formData.is_shared || false,
           unit_lead: formData.head_id || null,
           created_by: session.user.id
         };
@@ -152,34 +203,122 @@ const OrganizationalStructure = () => {
           code: formData.code,
           type: formData.type || 'sub_unit',
           description: formData.description,
-          unit_id: selectedParent?.id || editingItem?.unit_id,
+          unit_id: formData.selectedUnits?.[0]?.id || selectedParent?.id || editingItem?.unit_id,
+          primary_unit_id: formData.primaryUnitId,
+          is_shared: formData.is_shared || false,
           sub_unit_lead: formData.head_id || null,
           created_by: session.user.id
         };
         break;
     }
 
-    if (editingItem) {
-      // Update
-      const { error } = await supabase
-        .from(table)
-        .update({ ...data, updated_at: new Date().toISOString() })
-        .eq('id', editingItem.id);
+    try {
+      let entityId;
       
-      if (!error) {
-        closeModal();
-        loadAllData();
+      if (editingItem) {
+        // Update
+        const { error } = await supabase
+          .from(table)
+          .update({ ...data, updated_at: new Date().toISOString() })
+          .eq('id', editingItem.id);
+        
+        if (error) throw error;
+        entityId = editingItem.id;
+      } else {
+        // Insert
+        console.log('Inserting data:', { table, data });
+        const { data: insertedData, error } = await supabase
+          .from(table)
+          .insert(data)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        console.log('Successfully inserted:', insertedData);
+        entityId = insertedData.id;
       }
-    } else {
-      // Insert
-      const { error } = await supabase
-        .from(table)
-        .insert(data);
-      
-      if (!error) {
-        closeModal();
-        loadAllData();
+
+      // Handle many-to-many relationships for units
+      if (modalType === 'unit' && formData.selectedDepartments) {
+        // Delete existing relationships
+        await supabase
+          .from('unit_departments')
+          .delete()
+          .eq('unit_id', entityId);
+
+        // Insert new relationships
+        if (formData.selectedDepartments.length > 0) {
+          const unitDeptData = formData.selectedDepartments.map(dept => ({
+            unit_id: entityId,
+            department_id: dept.id,
+            is_primary: dept.id === formData.primaryDepartmentId,
+            assigned_by: session.user.id
+          }));
+
+          const { error: relError } = await supabase
+            .from('unit_departments')
+            .insert(unitDeptData);
+          
+          if (relError) console.error('Error saving unit-department relationships:', relError);
+        }
       }
+
+      // Handle many-to-many relationships for sub-units
+      if (modalType === 'sub_unit' && formData.selectedUnits) {
+        // Delete existing relationships
+        await supabase
+          .from('sub_unit_units')
+          .delete()
+          .eq('sub_unit_id', entityId);
+
+        // Insert new relationships
+        if (formData.selectedUnits.length > 0) {
+          const subUnitData = formData.selectedUnits.map(unit => ({
+            sub_unit_id: entityId,
+            unit_id: unit.id,
+            is_primary: unit.id === formData.primaryUnitId,
+            assigned_by: session.user.id
+          }));
+
+          const { error: relError } = await supabase
+            .from('sub_unit_units')
+            .insert(subUnitData);
+          
+          if (relError) console.error('Error saving sub_unit-unit relationships:', relError);
+        }
+      }
+
+      // Handle tags
+      if (formData.selectedTags) {
+        // Delete existing tag assignments
+        await supabase
+          .from('tag_assignments')
+          .delete()
+          .eq('entity_type', modalType)
+          .eq('entity_id', entityId);
+
+        // Insert new tag assignments
+        if (formData.selectedTags.length > 0) {
+          const tagData = formData.selectedTags.map(tag => ({
+            tag_id: tag.id,
+            entity_type: modalType,
+            entity_id: entityId,
+            assigned_by: session.user.id
+          }));
+
+          const { error: tagError } = await supabase
+            .from('tag_assignments')
+            .insert(tagData);
+          
+          if (tagError) console.error('Error saving tags:', tagError);
+        }
+      }
+
+      closeModal();
+      loadAllData();
+    } catch (error) {
+      console.error('Error saving:', error);
+      alert(`Error saving ${modalType}: ${error.message}`);
     }
   };
 
@@ -447,12 +586,78 @@ const EditModal = ({ type, item, parent, onClose, onSave, divisions, departments
     code: item?.code || '',
     description: item?.description || '',
     type: item?.type || 'sub_unit',
-    head_id: item?.head_of_division || item?.head_of_department || item?.unit_lead || item?.sub_unit_lead || ''
+    head_id: item?.head_of_division || item?.head_of_department || item?.unit_lead || item?.sub_unit_lead || '',
+    is_shared: item?.is_shared || false
   });
 
-  const handleSubmit = (e) => {
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedDepartments, setSelectedDepartments] = useState([]);
+  const [selectedUnits, setSelectedUnits] = useState([]);
+  const [primaryDepartmentId, setPrimaryDepartmentId] = useState(item?.primary_department_id || null);
+  const [primaryUnitId, setPrimaryUnitId] = useState(item?.primary_unit_id || null);
+  const [loading, setLoading] = useState(false);
+
+  // Load existing tags and relationships
+  useEffect(() => {
+    if (item?.id) {
+      loadExistingData();
+    }
+  }, [item]);
+
+  const loadExistingData = async () => {
+    if (!item?.id) return;
+
+    // Load tags
+    const { data: tagData } = await supabase
+      .from('tag_assignments')
+      .select('*, tag:organizational_tags(*)')
+      .eq('entity_type', type)
+      .eq('entity_id', item.id);
+    
+    if (tagData) {
+      setSelectedTags(tagData.map(ta => ta.tag));
+    }
+
+    // Load department relationships for units
+    if (type === 'unit') {
+      const { data: deptData } = await supabase
+        .from('unit_departments')
+        .select('*, department:departments(*)')
+        .eq('unit_id', item.id);
+      
+      if (deptData) {
+        setSelectedDepartments(deptData.map(ud => ud.department));
+      }
+    }
+
+    // Load unit relationships for sub-units
+    if (type === 'sub_unit') {
+      const { data: unitData } = await supabase
+        .from('sub_unit_units')
+        .select('*, unit:units(*)')
+        .eq('sub_unit_id', item.id);
+      
+      if (unitData) {
+        setSelectedUnits(unitData.map(su => su.unit));
+      }
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+    setLoading(true);
+
+    const saveData = {
+      ...formData,
+      selectedTags,
+      selectedDepartments: type === 'unit' ? selectedDepartments : undefined,
+      selectedUnits: type === 'sub_unit' ? selectedUnits : undefined,
+      primaryDepartmentId: type === 'unit' ? primaryDepartmentId : undefined,
+      primaryUnitId: type === 'sub_unit' ? primaryUnitId : undefined
+    };
+
+    await onSave(saveData);
+    setLoading(false);
   };
 
   const getTitle = () => {
@@ -514,6 +719,54 @@ const EditModal = ({ type, item, parent, onClose, onSave, divisions, departments
             </div>
           )}
 
+          {/* Multi-department selector for units */}
+          {type === 'unit' && (
+            <>
+              <MultiDepartmentSelector
+                departments={departments}
+                selectedDepartments={selectedDepartments}
+                onDepartmentsChange={setSelectedDepartments}
+                primaryDepartmentId={primaryDepartmentId}
+                onPrimaryChange={setPrimaryDepartmentId}
+              />
+              
+              <div className={styles.formGroup}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.is_shared}
+                    onChange={(e) => setFormData({ ...formData, is_shared: e.target.checked })}
+                  />
+                  {' '}Shared Unit (operates across multiple departments)
+                </label>
+              </div>
+            </>
+          )}
+
+          {/* Multi-unit selector for sub-units */}
+          {type === 'sub_unit' && (
+            <>
+              <MultiDepartmentSelector
+                departments={units} // Reusing component but passing units
+                selectedDepartments={selectedUnits}
+                onDepartmentsChange={setSelectedUnits}
+                primaryDepartmentId={primaryUnitId}
+                onPrimaryChange={setPrimaryUnitId}
+              />
+              
+              <div className={styles.formGroup}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.is_shared}
+                    onChange={(e) => setFormData({ ...formData, is_shared: e.target.checked })}
+                  />
+                  {' '}Shared Sub-Unit (operates across multiple units)
+                </label>
+              </div>
+            </>
+          )}
+
           <div className={styles.formGroup}>
             <label>Description</label>
             <textarea
@@ -524,12 +777,23 @@ const EditModal = ({ type, item, parent, onClose, onSave, divisions, departments
             />
           </div>
 
+          {/* Tags */}
+          <div className={styles.formGroup}>
+            <label>Tags</label>
+            <TagSelector
+              entityType={type}
+              entityId={item?.id}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+            />
+          </div>
+
           <div className={styles.modalFooter}>
             <button type="button" onClick={onClose} className={styles.cancelButton}>
               Cancel
             </button>
-            <button type="submit" className={styles.saveButton}>
-              Save
+            <button type="submit" className={styles.saveButton} disabled={loading}>
+              {loading ? 'Saving...' : 'Save'}
             </button>
           </div>
         </form>

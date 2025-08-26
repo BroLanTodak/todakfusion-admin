@@ -28,7 +28,13 @@ const StrategicFoundation = () => {
   const [newValue, setNewValue] = useState({ title: '', description: '', icon: '💎' });
   const [newObjective, setNewObjective] = useState({ title: '', description: '', timeframe: '3_years', target_date: '' });
   const [newPillar, setNewPillar] = useState({ name: '', description: '', color: '#3498db', icon: '🏛️' });
-  const [newMarket, setNewMarket] = useState({ segment_name: '', description: '', priority: 'medium' });
+  const [newMarket, setNewMarket] = useState({ 
+    segment_name: '', 
+    description: '', 
+    priority: 'medium',
+    size_estimate: '',
+    characteristics: []
+  });
   const [newMilestone, setNewMilestone] = useState({ title: '', description: '', objective_id: '', target_date: '', status: 'pending' });
 
   useEffect(() => {
@@ -143,12 +149,24 @@ const StrategicFoundation = () => {
   };
 
   const loadTargetMarkets = async () => {
+    console.log('Loading target markets...');
     const { data, error } = await supabase
       .from('target_markets')
       .select('*')
-      .order('priority DESC');
+      .order('created_at', { ascending: false });
     
-    if (!error && data) setTargetMarkets(data);
+    if (error) {
+      console.error('Error loading target markets:', error);
+      console.error('Error details:', error.message, error.details);
+    } else if (data) {
+      console.log('Target markets loaded:', data);
+      // Sort by priority locally
+      const sortedData = data.sort((a, b) => {
+        const priorityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+        return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+      });
+      setTargetMarkets(sortedData);
+    }
   };
 
   const loadMilestones = async () => {
@@ -301,20 +319,35 @@ const StrategicFoundation = () => {
     if (!newMarket.segment_name.trim()) return;
     
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) {
+      console.error('No session found');
+      return;
+    }
 
     const marketData = {
       ...newMarket,
       created_by: session.user.id
     };
 
-    const { error } = await supabase
+    console.log('Saving target market:', marketData);
+    const { data, error } = await supabase
       .from('target_markets')
-      .insert(marketData);
+      .insert(marketData)
+      .select();
 
-    if (!error) {
-      setNewMarket({ segment_name: '', description: '', priority: 'medium' });
-      loadTargetMarkets();
+    if (error) {
+      console.error('Error saving target market:', error);
+      alert(`Error saving target market: ${error.message}`);
+    } else {
+      console.log('Target market saved:', data);
+      setNewMarket({ 
+        segment_name: '', 
+        description: '', 
+        priority: 'medium',
+        size_estimate: '',
+        characteristics: []
+      });
+      await loadTargetMarkets();
     }
   };
 
@@ -935,6 +968,7 @@ const StrategicFoundation = () => {
                 onChange={(e) => setNewMarket({ ...newMarket, priority: e.target.value })}
                 className={styles.select}
               >
+                <option value="critical">Keutamaan Kritikal</option>
                 <option value="high">Keutamaan Tinggi</option>
                 <option value="medium">Keutamaan Sederhana</option>
                 <option value="low">Keutamaan Rendah</option>
@@ -959,25 +993,33 @@ const StrategicFoundation = () => {
             </div>
 
             <div className={styles.marketsList}>
-              {targetMarkets.map(market => (
-                <div key={market.id} className={`${styles.marketCard} ${styles[market.priority]}`}>
-                  <div className={styles.marketHeader}>
-                    <h3>{market.segment_name}</h3>
-                    <div className={styles.cardActions}>
-                      <span className={`${styles.priorityBadge} ${styles[market.priority]}`}>
-                        {market.priority === 'high' ? 'Tinggi' : market.priority === 'medium' ? 'Sederhana' : 'Rendah'}
-                      </span>
-                      <button onClick={() => openEditModal('market', market)}>
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => deleteTargetMarket(market.id)}>
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  <p className={styles.marketDescription}>{market.description}</p>
+              {targetMarkets.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <Users size={48} opacity={0.3} />
+                  <p>Tiada pasaran sasaran ditemui. Tambah pasaran sasaran pertama anda.</p>
+                  <p style={{ fontSize: '0.875rem', opacity: 0.7 }}>Data: {targetMarkets.length} items</p>
                 </div>
-              ))}
+              ) : (
+                targetMarkets.map(market => (
+                  <div key={market.id} className={`${styles.marketCard} ${styles[market.priority]}`}>
+                    <div className={styles.marketHeader}>
+                      <h3>{market.segment_name}</h3>
+                      <div className={styles.cardActions}>
+                        <span className={`${styles.priorityBadge} ${styles[market.priority]}`}>
+                          {market.priority === 'critical' ? 'Kritikal' : market.priority === 'high' ? 'Tinggi' : market.priority === 'medium' ? 'Sederhana' : 'Rendah'}
+                        </span>
+                        <button onClick={() => openEditModal('market', market)}>
+                          <Edit2 size={16} />
+                        </button>
+                        <button onClick={() => deleteTargetMarket(market.id)}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    <p className={styles.marketDescription}>{market.description}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

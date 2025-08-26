@@ -1,6 +1,13 @@
--- Add is_active and order_position columns to existing divisions table
-ALTER TABLE divisions ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
-ALTER TABLE divisions ADD COLUMN IF NOT EXISTS order_position INTEGER DEFAULT 0;
+-- Note: divisions table should be created before running this migration
+-- Check if divisions table exists
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'divisions') THEN
+        -- Add is_active and order_position columns to existing divisions table if they don't exist
+        ALTER TABLE divisions ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+        ALTER TABLE divisions ADD COLUMN IF NOT EXISTS order_position INTEGER DEFAULT 0;
+    END IF;
+END $$;
 
 -- Departments Table
 CREATE TABLE IF NOT EXISTS departments (
@@ -52,7 +59,6 @@ CREATE TABLE IF NOT EXISTS sub_units (
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_divisions_order ON divisions(order_position);
 CREATE INDEX IF NOT EXISTS idx_departments_div ON departments(division_id);
 CREATE INDEX IF NOT EXISTS idx_units_dept ON units(department_id);
 CREATE INDEX IF NOT EXISTS idx_sub_units_unit ON sub_units(unit_id);
@@ -135,10 +141,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers for all tables
-CREATE TRIGGER update_divisions_updated_at
-BEFORE UPDATE ON divisions
-FOR EACH ROW
-EXECUTE FUNCTION update_org_structure_updated_at();
+-- Note: Trigger for divisions table is created in divisions table migration
 
 CREATE TRIGGER update_departments_updated_at
 BEFORE UPDATE ON departments
