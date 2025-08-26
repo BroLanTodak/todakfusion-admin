@@ -73,6 +73,7 @@ const Layout = () => {
         { path: '/canvas', icon: Grid3X3, label: 'Business Canvas' },
         { path: '/swot', icon: Activity, label: 'SWOT Analysis' },
         { path: '/okr', icon: Target, label: 'OKR Management' },
+        { path: '/organizational-structure', icon: Users, label: 'Organizational Structure' },
       ]
     },
     { type: 'separator' },

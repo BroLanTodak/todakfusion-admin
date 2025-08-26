@@ -11,6 +11,7 @@ import BusinessCanvas from './pages/BusinessCanvas';
 import OKR from './pages/OKR';
 import SWOT from './pages/SWOT';
 import StrategicFoundation from './pages/StrategicFoundation';
+import OrganizationalStructure from './pages/OrganizationalStructure';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
               <Route path="vision-mission" element={<VisionMission />} />
               <Route path="canvas" element={<BusinessCanvas />} />
               <Route path="okr" element={<OKR />} />
+              <Route path="organizational-structure" element={<OrganizationalStructure />} />
               <Route path="swot" element={<SWOT />} />
               <Route path="users" element={<Users />} />
             </Route>
